@@ -1,0 +1,17 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #fff;
+  overflow-x: hidden;
+}
+
+button { cursor: pointer; }
+a { text-decoration: none; color: inherit; }
