@@ -25,7 +25,7 @@ const authLimiter = rateLimit({
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://your-domain.com']
+    ? ['https://blog-page-gray-gamma.vercel.app']
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
