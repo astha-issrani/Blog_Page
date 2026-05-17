@@ -1,51 +1,64 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
 
 const AuthContext = createContext()
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(() => localStorage.getItem('wf_token'))
+  const [token, setToken] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // On mount, restore session from localStorage
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      axios.get('/api/auth/me')
-        .then(res => setUser(res.data.user))
-        .catch(() => logout())
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
+    const savedToken = localStorage.getItem('wf_token')
+    const savedUser = localStorage.getItem('wf_user')
+    if (savedToken && savedUser) {
+      setToken(savedToken)
+      setUser(JSON.parse(savedUser))
     }
-  }, [token])
+    setLoading(false)
+  }, [])
 
-  const login = async (email, password) => {
-    const res = await axios.post('/api/auth/login', { email, password })
-    const { token: t, user: u } = res.data
-    localStorage.setItem('wf_token', t)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${t}`
-    setToken(t)
-    setUser(u)
-    return u
+  const saveSession = (token, user) => {
+    localStorage.setItem('wf_token', token)
+    localStorage.setItem('wf_user', JSON.stringify(user))
+    setToken(token)
+    setUser(user)
   }
 
-  const register = async (name, email, password) => {
-    const res = await axios.post('/api/auth/register', { name, email, password })
-    const { token: t, user: u } = res.data
-    localStorage.setItem('wf_token', t)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${t}`
-    setToken(t)
-    setUser(u)
-    return u
-  }
-
-  const logout = () => {
+  const clearSession = () => {
     localStorage.removeItem('wf_token')
-    delete axios.defaults.headers.common['Authorization']
+    localStorage.removeItem('wf_user')
     setToken(null)
     setUser(null)
   }
+
+  const register = async (name, email, password) => {
+    const res = await fetch(`${API}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Registration failed')
+    saveSession(data.token, data.user)
+    return data.user
+  }
+
+  const login = async (email, password) => {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Login failed')
+    saveSession(data.token, data.user)
+    return data.user
+  }
+
+  const logout = () => clearSession()
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>

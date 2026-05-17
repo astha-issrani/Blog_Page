@@ -2,11 +2,7 @@ import { useState } from 'react'
 import AuthModal from '../components/AuthModal'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-
-
-
-// on any article card click:
-
+import AdBanner from '../components/AdBanner'
 
 const fontLink = document.createElement('link')
 fontLink.rel = 'stylesheet'
@@ -15,200 +11,45 @@ if (!document.head.querySelector('link[href*="Source+Serif"]')) document.head.ap
 
 const styles = `
   .wf-home * { box-sizing: border-box; margin: 0; padding: 0; }
-  .wf-home { font-family: 'DM Sans', sans-serif; background: #F7F4ED; min-height: 100vh; color: #1a1a1a; }
-
-  .wf-home-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: 64px; background: #F7F4ED;
-    border-bottom: 1px solid #d4c9b0;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .wf-home-logo {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 26px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px;
-  }
-  .wf-home-nav-links { display: flex; align-items: center; gap: 28px; }
-  .wf-home-nav-link {
-    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #1a1a1a;
-    background: none; border: none; cursor: pointer; letter-spacing: 0.01em;
-  }
-  .wf-home-nav-link:hover { opacity: 0.7; }
-  .wf-home-btn-outline {
-    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #1a1a1a;
-    background: none; border: none; cursor: pointer;
-  }
-  .wf-home-btn-filled {
-    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #F7F4ED;
-    background: #1a1a1a; border: none; cursor: pointer;
-    border-radius: 100px; padding: 9px 20px;
-    transition: opacity 0.15s;
-  }
-  .wf-home-btn-filled:hover { opacity: 0.85; }
-
-  /* HERO */
-  .wf-hero-section {
-    border-bottom: 1px solid #d4c9b0;
-    display: grid; grid-template-columns: 1fr 1fr;
-    min-height: 520px; overflow: hidden;
-    padding: 0 0 0 40px;
-  }
-  .wf-hero-left {
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 80px 60px 80px 0;
-  }
-  .wf-hero-headline {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: clamp(52px, 7vw, 88px);
-    font-weight: 400; line-height: 1.0; letter-spacing: -2px;
-    color: #1a1a1a; margin-bottom: 28px;
-  }
-  .wf-hero-sub {
-    font-family: 'DM Sans', sans-serif; font-size: 18px;
-    color: #1a1a1a; margin-bottom: 36px; line-height: 1.5;
-    font-weight: 400;
-  }
-  .wf-hero-cta {
-    font-family: 'DM Sans', sans-serif; font-size: 17px; color: #F7F4ED;
-    background: #1a1a1a; border: none; cursor: pointer;
-    border-radius: 100px; padding: 14px 32px;
-    display: inline-block; width: fit-content;
-    transition: opacity 0.15s; font-weight: 400;
-  }
+  .wf-home { font-family: 'DM Sans', sans-serif; background: #F7F4ED; color: #1a1a1a; }
+  .wf-hero-section { border-bottom: 1px solid #d4c9b0; display: grid; grid-template-columns: 1fr 1fr; min-height: 520px; overflow: hidden; padding: 0 0 0 40px; }
+  .wf-hero-left { display: flex; flex-direction: column; justify-content: center; padding: 80px 60px 80px 0; }
+  .wf-hero-headline { font-family: 'Source Serif 4', Georgia, serif; font-size: clamp(52px, 7vw, 88px); font-weight: 400; line-height: 1.0; letter-spacing: -2px; color: #1a1a1a; margin-bottom: 28px; }
+  .wf-hero-sub { font-family: 'DM Sans', sans-serif; font-size: 18px; color: #1a1a1a; margin-bottom: 36px; line-height: 1.5; font-weight: 400; }
+  .wf-hero-cta { font-family: 'DM Sans', sans-serif; font-size: 17px; color: #F7F4ED; background: #1a1a1a; border: none; cursor: pointer; border-radius: 100px; padding: 14px 32px; display: inline-block; width: fit-content; transition: opacity 0.15s; font-weight: 400; }
   .wf-hero-cta:hover { opacity: 0.8; }
-  .wf-hero-right {
-    position: relative; overflow: hidden;
-    border-left: 1px solid #d4c9b0;
-    background: #F7F4ED;
-    display: flex; align-items: flex-end; justify-content: flex-end;
-  }
-
-  /* SVG illustration area */
-  .wf-hero-art { width: 100%; height: 100%; position: relative; }
-
-  /* TRENDING BAR */
-  .wf-trending-bar {
-    border-bottom: 1px solid #d4c9b0; padding: 20px 40px;
-    display: flex; align-items: center; gap: 24px; overflow-x: auto;
-  }
-  .wf-trending-label {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    color: #1a1a1a; white-space: nowrap; letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .wf-trending-tag {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1a1a1a;
-    background: none; border: 1px solid #c5bba6; border-radius: 100px;
-    padding: 6px 16px; cursor: pointer; white-space: nowrap;
-    transition: background 0.15s, border-color 0.15s;
-  }
+  .wf-hero-right { position: relative; overflow: hidden; border-left: 1px solid #d4c9b0; background: #F7F4ED; display: flex; align-items: flex-end; justify-content: flex-end; }
+  .wf-trending-bar { border-bottom: 1px solid #d4c9b0; padding: 20px 40px; display: flex; align-items: center; gap: 24px; overflow-x: auto; }
+  .wf-trending-label { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: #1a1a1a; white-space: nowrap; letter-spacing: 0.04em; text-transform: uppercase; }
+  .wf-trending-tag { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1a1a1a; background: none; border: 1px solid #c5bba6; border-radius: 100px; padding: 6px 16px; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
   .wf-trending-tag:hover { background: #ede8df; }
-
-  /* ARTICLES GRID */
   .wf-articles-section { padding: 48px 40px; }
-  .wf-section-label {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a1a;
-    margin-bottom: 24px;
-  }
-  .wf-articles-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 0; border: 1px solid #d4c9b0; border-radius: 2px; overflow: hidden;
-  }
-  .wf-article-card {
-    padding: 28px 24px; border-right: 1px solid #d4c9b0;
-    border-bottom: 1px solid #d4c9b0; background: #F7F4ED;
-    cursor: pointer; transition: background 0.15s;
-  }
+  .wf-section-label { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a1a; margin-bottom: 24px; }
+  .wf-articles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #d4c9b0; border-radius: 2px; overflow: hidden; }
+  .wf-article-card { padding: 28px 24px; border-right: 1px solid #d4c9b0; border-bottom: 1px solid #d4c9b0; background: #F7F4ED; cursor: pointer; transition: background 0.15s; text-decoration: none; display: block; }
   .wf-article-card:hover { background: #eee8db; }
   .wf-article-card:nth-child(3n) { border-right: none; }
   .wf-article-card:nth-last-child(-n+3) { border-bottom: none; }
-  .wf-card-author {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-  }
-  .wf-card-avatar {
-    width: 22px; height: 22px; border-radius: 50%; background: #1a1a1a;
-    display: flex; align-items: center; justify-content: center;
-    color: #F7F4ED; font-size: 9px; font-weight: 700; flex-shrink: 0;
-  }
-  .wf-card-author-name {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: #1a1a1a;
-  }
-  .wf-card-title {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 18px; font-weight: 700; line-height: 24px;
-    color: #1a1a1a; margin-bottom: 12px; letter-spacing: -0.2px;
-  }
-  .wf-card-meta {
-    font-family: 'DM Sans', sans-serif; font-size: 12px; color: #7a6f5e;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .wf-card-tag {
-    background: #ede8df; border-radius: 100px; padding: 2px 10px;
-    font-size: 11px; color: #5a5040;
-  }
-
-  /* FULL-WIDTH FEATURE */
-  .wf-feature-strip {
-    border-top: 1px solid #d4c9b0; border-bottom: 1px solid #d4c9b0;
-    background: #1a1a1a; padding: 80px 40px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
-  }
-  .wf-feature-headline {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: clamp(32px, 4vw, 52px); font-weight: 400;
-    color: #F7F4ED; line-height: 1.15; letter-spacing: -1px;
-  }
-  .wf-feature-body {
-    font-family: 'DM Sans', sans-serif; font-size: 17px;
-    color: #c5bba6; line-height: 1.7;
-  }
-  .wf-feature-cta {
-    display: inline-block; margin-top: 28px;
-    font-family: 'DM Sans', sans-serif; font-size: 15px;
-    color: #1a1a1a; background: #F7F4ED;
-    border: none; border-radius: 100px; padding: 11px 28px;
-    cursor: pointer; transition: opacity 0.15s;
-  }
+  .wf-card-author { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .wf-card-avatar { width: 22px; height: 22px; border-radius: 50%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; color: #F7F4ED; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .wf-card-author-name { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .wf-card-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 700; line-height: 24px; color: #1a1a1a; margin-bottom: 12px; letter-spacing: -0.2px; }
+  .wf-card-meta { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #7a6f5e; display: flex; align-items: center; gap: 12px; }
+  .wf-card-tag { background: #ede8df; border-radius: 100px; padding: 2px 10px; font-size: 11px; color: #5a5040; }
+  .wf-feature-strip { border-top: 1px solid #d4c9b0; border-bottom: 1px solid #d4c9b0; background: #1a1a1a; padding: 80px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .wf-feature-headline { font-family: 'Source Serif 4', Georgia, serif; font-size: clamp(32px, 4vw, 52px); font-weight: 400; color: #F7F4ED; line-height: 1.15; letter-spacing: -1px; }
+  .wf-feature-body { font-family: 'DM Sans', sans-serif; font-size: 17px; color: #c5bba6; line-height: 1.7; }
+  .wf-feature-cta { display: inline-block; margin-top: 28px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #1a1a1a; background: #F7F4ED; border: none; border-radius: 100px; padding: 11px 28px; cursor: pointer; transition: opacity 0.15s; }
   .wf-feature-cta:hover { opacity: 0.85; }
-
-  /* MORE STORIES */
   .wf-more-section { padding: 48px 40px; }
-  .wf-more-list { }
-  .wf-more-row {
-    display: grid; grid-template-columns: 1fr 80px;
-    gap: 20px; align-items: start;
-    padding: 24px 0; border-bottom: 1px solid #d4c9b0; cursor: pointer;
-  }
-  .wf-more-row:hover .wf-more-title { text-decoration: underline; }
+  .wf-more-row { display: grid; grid-template-columns: 1fr 80px; gap: 20px; align-items: start; padding: 24px 0; border-bottom: 1px solid #d4c9b0; cursor: pointer; transition: opacity 0.15s; }
   .wf-more-row:first-child { border-top: 1px solid #d4c9b0; }
-  .wf-more-title {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 20px; font-weight: 700; color: #1a1a1a;
-    line-height: 26px; margin-bottom: 6px; letter-spacing: -0.2px;
-  }
-  .wf-more-sub {
-    font-family: 'DM Sans', sans-serif; font-size: 14px;
-    color: #7a6f5e; line-height: 20px; margin-bottom: 10px;
-  }
-  .wf-more-meta {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; color: #7a6f5e;
-    display: flex; gap: 12px; align-items: center;
-  }
-  .wf-more-thumb {
-    width: 80px; height: 54px; border-radius: 2px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* FOOTER */
-  .wf-home-footer {
-    border-top: 1px solid #d4c9b0; padding: 24px 40px;
-    display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center;
-  }
-  .wf-home-footer-link {
-    font-family: 'DM Sans', sans-serif; font-size: 13px; color: #7a6f5e; cursor: pointer;
-  }
-  .wf-home-footer-link:hover { color: #1a1a1a; }
-
+  .wf-more-row:hover { opacity: 0.75; }
+  .wf-more-row:hover .wf-more-title { text-decoration: underline; }
+  .wf-more-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 26px; margin-bottom: 6px; letter-spacing: -0.2px; }
+  .wf-more-sub { font-family: 'DM Sans', sans-serif; font-size: 14px; color: #7a6f5e; line-height: 20px; margin-bottom: 10px; }
+  .wf-more-meta { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #7a6f5e; display: flex; gap: 12px; align-items: center; }
+  .wf-more-thumb { width: 80px; height: 54px; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   @media (max-width: 900px) {
     .wf-hero-section { grid-template-columns: 1fr; padding: 0; }
     .wf-hero-right { display: none; }
@@ -217,14 +58,9 @@ const styles = `
     .wf-article-card { border-right: none; }
     .wf-article-card:nth-last-child(-n+3) { border-bottom: 1px solid #d4c9b0; }
     .wf-article-card:last-child { border-bottom: none; }
-    .wf-feature-strip { grid-template-columns: 1fr; gap: 32px; }
-    .wf-home-nav { padding: 0 20px; }
+    .wf-feature-strip { grid-template-columns: 1fr; gap: 32px; padding: 60px 20px; }
     .wf-trending-bar { padding: 16px 20px; }
-    .wf-articles-section { padding: 40px 20px; }
-    .wf-more-section { padding: 40px 20px; }
-    .wf-feature-strip { padding: 60px 20px; }
-    .wf-home-footer { padding: 24px 20px; }
-    .wf-home-nav-links .wf-home-nav-link { display: none; }
+    .wf-articles-section, .wf-more-section { padding: 40px 20px; }
   }
 `
 
@@ -240,45 +76,33 @@ const ARTICLES = [
 const MORE = [
   { id:'m1', title:'Writers, You Can Now Schedule Stories on WriteFlow', sub:'A smarter way to plan and publish your writing — on your terms', author:'WriteFlow Staff', tag:'Product', mins:5, bg:'#0d1117' },
   { id:'m2', title:'Introducing Collections: Organize Your Writing by Theme', sub:'A new way to group your stories and reach the right readers', author:'WriteFlow Staff', tag:'Product', mins:4, bg:'#1a1040' },
-  { id:'m3', title:'How I Grew My Audience to 10,000 Readers in Six Months', sub:'The tactics that worked, the ones that didn\'t, and what I\'d do differently', author:'Layla Hassan', tag:'Growth', mins:9, bg:'#0f2027' },
+  { id:'m3', title:'How I Grew My Audience to 10,000 Readers in Six Months', sub:"The tactics that worked, the ones that didn't, and what I'd do differently", author:'Layla Hassan', tag:'Growth', mins:9, bg:'#0f2027' },
 ]
 
 const TAGS = ['Writing','Technology','Self-Improvement','Design','Poetry','Data Science','Productivity','Culture','Finance']
-
 const thumbGrads = ['#0d1117','#1a1a2e','#0f2027','#200122','#141e30']
 
 export default function HomePage() {
-  const [modal, setModal] = useState(null)
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [modal, setModal] = useState(null)
 
   const handleStart = () => {
-    if (user) navigate('/dashboard')
+    if (user) navigate('/blog')
     else setModal('register')
   }
+
+  const handleStartWriting = () => {
+    if (user) navigate('/write')
+    else { setModal('register') }
+  }
+
+  const goToBlog = () => navigate('/blog')
 
   return (
     <>
       <style>{styles}</style>
       <div className="wf-home">
-
-        {/* NAV */}
-        <nav className="wf-home-nav">
-          <span className="wf-home-logo">WriteFlow</span>
-          <div className="wf-home-nav-links">
-            <button className="wf-home-nav-link">Our story</button>
-            <button className="wf-home-nav-link">Membership</button>
-            <button className="wf-home-nav-link">Write</button>
-            {user ? (
-              <button className="wf-home-btn-outline" onClick={() => navigate('/dashboard')}>Dashboard</button>
-            ) : (
-              <button className="wf-home-btn-outline" onClick={() => setModal('login')}>Sign in</button>
-            )}
-            <button className="wf-home-btn-filled" onClick={handleStart}>
-              {user ? 'Write a story' : 'Get started'}
-            </button>
-          </div>
-        </nav>
 
         {/* HERO */}
         <section className="wf-hero-section">
@@ -288,62 +112,50 @@ export default function HomePage() {
             <button className="wf-hero-cta" onClick={handleStart}>Start reading</button>
           </div>
           <div className="wf-hero-right">
-            {/* Decorative illustration — geometric + organic shapes like Medium */}
             <svg width="100%" height="100%" viewBox="0 0 560 520" preserveAspectRatio="xMidYMid slice"
               xmlns="http://www.w3.org/2000/svg" style={{position:'absolute',inset:0}}>
-              {/* Large green flower / blob top right */}
               <ellipse cx="420" cy="80" rx="110" ry="95" fill="#3a7d2e" transform="rotate(-15 420 80)"/>
               <ellipse cx="500" cy="120" rx="85" ry="90" fill="#3a7d2e" transform="rotate(20 500 120)"/>
               <ellipse cx="390" cy="155" rx="90" ry="75" fill="#3a7d2e" transform="rotate(5 390 155)"/>
               <ellipse cx="460" cy="55" rx="70" ry="80" fill="#3a7d2e" transform="rotate(-30 460 55)"/>
               <circle cx="440" cy="110" r="28" fill="#F7F4ED"/>
               <circle cx="440" cy="110" r="14" fill="#3a7d2e"/>
-              {/* Geometric / math lines */}
               <line x1="280" y1="40" x2="540" y2="260" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.35"/>
               <line x1="320" y1="20" x2="320" y2="320" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.35"/>
               <line x1="200" y1="180" x2="540" y2="180" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.35"/>
-              <line x1="280" y1="40" x2="530" y2="290" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.25"/>
-              <line x1="200" y1="100" x2="500" y2="340" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.25"/>
-              {/* Small angle marks */}
-              <path d="M315 175 L315 185 L325 185" fill="none" stroke="#1a1a1a" strokeWidth="0.8" opacity="0.5"/>
               <text x="345" y="175" fontSize="10" fill="#1a1a1a" opacity="0.5" fontFamily="serif">N″</text>
-              <text x="290" y="165" fontSize="10" fill="#1a1a1a" opacity="0.5" fontFamily="serif">α″</text>
               <text x="510" y="200" fontSize="10" fill="#1a1a1a" opacity="0.5" fontFamily="serif">6</text>
-              <text x="300" y="50" fontSize="10" fill="#1a1a1a" opacity="0.5" fontFamily="serif">B</text>
-              {/* Green square bottom right with hand writing */}
               <rect x="300" y="310" width="260" height="210" fill="#3a7d2e"/>
-              {/* Stars / scattered dots */}
               <circle cx="270" cy="360" r="2.5" fill="#1a1a1a" opacity="0.6"/>
               <circle cx="290" cy="400" r="2" fill="#1a1a1a" opacity="0.5"/>
               <circle cx="250" cy="420" r="2" fill="#1a1a1a" opacity="0.5"/>
               <circle cx="280" cy="450" r="3" fill="#1a1a1a" opacity="0.6"/>
               <circle cx="240" cy="470" r="2" fill="#1a1a1a" opacity="0.4"/>
-              <circle cx="260" cy="490" r="2.5" fill="#1a1a1a" opacity="0.5"/>
-              <circle cx="300" cy="480" r="2" fill="#1a1a1a" opacity="0.4"/>
-              <circle cx="215" cy="390" r="2" fill="#1a1a1a" opacity="0.35"/>
-              {/* Hand/pencil silhouette on green block */}
               <path d="M400 450 Q380 410 370 390 Q360 370 380 360 Q400 350 420 370 L440 400 Z" fill="#F7F4ED" opacity="0.9"/>
               <rect x="430" y="365" width="12" height="55" rx="4" fill="#F7F4ED" transform="rotate(35 436 392)" opacity="0.9"/>
-              {/* Horizontal line scattered at bottom */}
-              <line x1="200" y1="500" x2="560" y2="430" stroke="#1a1a1a" strokeWidth="0.7" opacity="0.25"/>
             </svg>
           </div>
         </section>
 
-        {/* TRENDING TOPICS */}
+        {/* ── AD 1 — below hero ── */}
+        <div style={{ padding: '24px 40px', borderBottom: '1px solid #d4c9b0', display: 'flex', justifyContent: 'center', background: '#F7F4ED' }}>
+          <AdBanner slot="horizontal" />
+        </div>
+
+        {/* TRENDING */}
         <div className="wf-trending-bar">
           <span className="wf-trending-label">Trending</span>
           {TAGS.map(t => (
-            <button key={t} className="wf-trending-tag">{t}</button>
+            <button key={t} className="wf-trending-tag" onClick={goToBlog}>{t}</button>
           ))}
         </div>
 
-        {/* FEATURED ARTICLES GRID */}
+        {/* STAFF PICKS GRID */}
         <section className="wf-articles-section">
           <div className="wf-section-label">Staff Picks</div>
           <div className="wf-articles-grid">
-            {ARTICLES.map((a, i) => (
-              <div key={a.id} className="wf-article-card" onClick={() => navigate('/article')}>
+            {ARTICLES.map(a => (
+              <div key={a.id} className="wf-article-card" onClick={goToBlog}>
                 <div className="wf-card-author">
                   <div className="wf-card-avatar">{a.author[0]}</div>
                   <span className="wf-card-author-name">{a.author}</span>
@@ -359,54 +171,55 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* DARK FEATURE STRIP */}
+        {/* ── AD 2 — between staff picks and dark strip ── */}
+        <div style={{ padding: '0 40px 40px', display: 'flex', justifyContent: 'center', background: '#F7F4ED' }}>
+          <AdBanner slot="horizontal" />
+        </div>
+
+        {/* DARK STRIP */}
         <div className="wf-feature-strip">
           <div>
             <div className="wf-feature-headline">Write on<br/>WriteFlow.<br/>Share your ideas.</div>
           </div>
           <div>
             <p className="wf-feature-body">
-              Every idea deserves an audience. WriteFlow gives you the tools to write clearly, 
-              grow your readership, and connect with people who care about what you have to say. 
+              Every idea deserves an audience. WriteFlow gives you the tools to write clearly,
+              grow your readership, and connect with people who care about what you have to say.
               Start for free — no technical skills needed.
             </p>
-            <button className="wf-feature-cta" onClick={handleStart}>Start writing</button>
+            <button className="wf-feature-cta" onClick={handleStartWriting}>Start writing</button>
           </div>
         </div>
 
         {/* MORE STORIES */}
         <section className="wf-more-section">
           <div className="wf-section-label">From The WriteFlow Blog</div>
-          <div className="wf-more-list">
-            {MORE.map((a, i) => (
-              <div key={a.id} className="wf-more-row" onClick={() => navigate('/article')}>
-                <div>
-                  <div className="wf-more-title">{a.title}</div>
-                  <div className="wf-more-sub">{a.sub}</div>
-                  <div className="wf-more-meta">
-                    <div style={{width:18,height:18,borderRadius:'50%',background:'#1a1a1a',
-                      display:'flex',alignItems:'center',justifyContent:'center',
-                      color:'#F7F4ED',fontSize:8,fontWeight:700,flexShrink:0}}>{a.author[0]}</div>
-                    <span>{a.author}</span>
-                    <span>·</span>
-                    <span>{a.mins} min read</span>
-                    <span style={{background:'#ede8df',borderRadius:'100px',padding:'2px 10px',fontSize:11,color:'#5a5040'}}>{a.tag}</span>
-                  </div>
-                </div>
-                <div className="wf-more-thumb" style={{background: thumbGrads[i % thumbGrads.length]}}>
-                  <span style={{color:'rgba(255,255,255,0.2)',fontSize:22,fontFamily:"'Source Serif 4',serif"}}>W</span>
+          {MORE.map((a, i) => (
+            <div key={a.id} className="wf-more-row" onClick={goToBlog}>
+              <div>
+                <div className="wf-more-title">{a.title}</div>
+                <div className="wf-more-sub">{a.sub}</div>
+                <div className="wf-more-meta">
+                  <div style={{width:18,height:18,borderRadius:'50%',background:'#1a1a1a',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    color:'#F7F4ED',fontSize:8,fontWeight:700,flexShrink:0}}>{a.author[0]}</div>
+                  <span>{a.author}</span>
+                  <span>·</span>
+                  <span>{a.mins} min read</span>
+                  <span style={{background:'#ede8df',borderRadius:'100px',padding:'2px 10px',fontSize:11,color:'#5a5040'}}>{a.tag}</span>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="wf-more-thumb" style={{background: thumbGrads[i % thumbGrads.length]}}>
+                <span style={{color:'rgba(255,255,255,0.2)',fontSize:22,fontFamily:"'Source Serif 4',serif"}}>W</span>
+              </div>
+            </div>
+          ))}
         </section>
 
-        {/* FOOTER */}
-        <footer className="wf-home-footer">
-          {['Help','Status','About','Careers','Press','Blog','Privacy','Rules','Terms','Text to speech'].map(l => (
-            <span key={l} className="wf-home-footer-link">{l}</span>
-          ))}
-        </footer>
+        {/* ── AD 3 — bottom of page ── */}
+        <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', borderTop: '1px solid #d4c9b0', background: '#F7F4ED' }}>
+          <AdBanner slot="horizontal" />
+        </div>
 
       </div>
 
