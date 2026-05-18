@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const articleRoutes = require('./routes/articles');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api', limiter);
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/articles', articleRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AuthModal from '../components/AuthModal'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import AdBanner from '../components/AdBanner'
+import axios from 'axios'
 
 const fontLink = document.createElement('link')
 fontLink.rel = 'stylesheet'
@@ -26,7 +27,7 @@ const styles = `
   .wf-articles-section { padding: 48px 40px; }
   .wf-section-label { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a1a; margin-bottom: 24px; }
   .wf-articles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #d4c9b0; border-radius: 2px; overflow: hidden; }
-  .wf-article-card { padding: 28px 24px; border-right: 1px solid #d4c9b0; border-bottom: 1px solid #d4c9b0; background: #F7F4ED; cursor: pointer; transition: background 0.15s; text-decoration: none; display: block; }
+  .wf-article-card { padding: 28px 24px; border-right: 1px solid #d4c9b0; border-bottom: 1px solid #d4c9b0; background: #F7F4ED; cursor: pointer; transition: background 0.15s; }
   .wf-article-card:hover { background: #eee8db; }
   .wf-article-card:nth-child(3n) { border-right: none; }
   .wf-article-card:nth-last-child(-n+3) { border-bottom: none; }
@@ -50,6 +51,7 @@ const styles = `
   .wf-more-sub { font-family: 'DM Sans', sans-serif; font-size: 14px; color: #7a6f5e; line-height: 20px; margin-bottom: 10px; }
   .wf-more-meta { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #7a6f5e; display: flex; gap: 12px; align-items: center; }
   .wf-more-thumb { width: 80px; height: 54px; border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .wf-new-badge { background: #3a7d2e; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 8px; font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em; }
   @media (max-width: 900px) {
     .wf-hero-section { grid-template-columns: 1fr; padding: 0; }
     .wf-hero-right { display: none; }
@@ -64,28 +66,37 @@ const styles = `
   }
 `
 
-const ARTICLES = [
+const SEED_ARTICLES = [
   { id:'s1', title:'The Art of Writing Every Day Without Burning Out', author:'Priya Nair', tag:'Writing', mins:7, claps:214 },
   { id:'s2', title:'Why Your First Draft Should Be Terrible', author:'James Okafor', tag:'Creativity', mins:5, claps:178 },
   { id:'s3', title:"How WriteFlow's Algorithm Decides What You See", author:'WriteFlow Staff', tag:'Product', mins:6, claps:91 },
   { id:'s4', title:'Scheduling Stories Changed How I Think About Publishing', author:'Amara Silva', tag:'Writing', mins:4, claps:63 },
   { id:'s5', title:'The Quiet Power of Writing in Public', author:'Dev Sharma', tag:'Community', mins:5, claps:142 },
-  { id:'s6', title:'What 1,000 Days of Writing Taught Me', author:'Chen Wei', tag:'Writing', mins:8, claps:309 },
+  { id:'s6', title:"What 1,000 Days of Writing Taught Me", author:'Chen Wei', tag:'Writing', mins:8, claps:309 },
 ]
 
-const MORE = [
-  { id:'m1', title:'Writers, You Can Now Schedule Stories on WriteFlow', sub:'A smarter way to plan and publish your writing — on your terms', author:'WriteFlow Staff', tag:'Product', mins:5, bg:'#0d1117' },
-  { id:'m2', title:'Introducing Collections: Organize Your Writing by Theme', sub:'A new way to group your stories and reach the right readers', author:'WriteFlow Staff', tag:'Product', mins:4, bg:'#1a1040' },
-  { id:'m3', title:'How I Grew My Audience to 10,000 Readers in Six Months', sub:"The tactics that worked, the ones that didn't, and what I'd do differently", author:'Layla Hassan', tag:'Growth', mins:9, bg:'#0f2027' },
+const SEED_MORE = [
+  { _id:'m1', title:'Writers, You Can Now Schedule Stories on WriteFlow', subtitle:'A smarter way to plan and publish your writing — on your terms', author:{name:'WriteFlow Staff'}, tags:['Product'], readTime:5, seed:true },
+  { _id:'m2', title:'Introducing Collections: Organize Your Writing by Theme', subtitle:'A new way to group your stories and reach the right readers', author:{name:'WriteFlow Staff'}, tags:['Product'], readTime:4, seed:true },
+  { _id:'m3', title:'How I Grew My Audience to 10,000 Readers in Six Months', subtitle:"The tactics that worked, the ones that didn't, and what I'd do differently", author:{name:'Layla Hassan'}, tags:['Growth'], readTime:9, seed:true },
 ]
 
 const TAGS = ['Writing','Technology','Self-Improvement','Design','Poetry','Data Science','Productivity','Culture','Finance']
-const thumbGrads = ['#0d1117','#1a1a2e','#0f2027','#200122','#141e30']
+const thumbGrads = ['#0d1117','#1a1a2e','#0f2027','#200122','#141e30','#1a1040']
 
 export default function HomePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [modal, setModal] = useState(null)
+  const [realArticles, setRealArticles] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    axios.get('/api/articles')
+      .then(res => setRealArticles(res.data.articles || []))
+      .catch(() => setRealArticles([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleStart = () => {
     if (user) navigate('/blog')
@@ -94,7 +105,7 @@ export default function HomePage() {
 
   const handleStartWriting = () => {
     if (user) navigate('/write')
-    else { setModal('register') }
+    else setModal('register')
   }
 
   const goToBlog = () => navigate('/blog')
@@ -137,7 +148,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── AD 1 — below hero ── */}
+        {/* AD 1 */}
         <div style={{ padding: '24px 40px', borderBottom: '1px solid #d4c9b0', display: 'flex', justifyContent: 'center', background: '#F7F4ED' }}>
           <AdBanner slot="horizontal" />
         </div>
@@ -150,11 +161,42 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* STAFF PICKS GRID */}
+        {/* REAL USER ARTICLES — only shown when users have published */}
+        {!loading && realArticles.length > 0 && (
+          <section className="wf-articles-section">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+              <span className="wf-section-label" style={{ marginBottom: 0 }}>Latest from our writers</span>
+              <span className="wf-new-badge">NEW</span>
+            </div>
+            <div className="wf-articles-grid">
+              {realArticles.slice(0, 6).map(a => {
+                const authorName = a.author?.name || 'Unknown'
+                const tag = a.tags?.[0] || 'Writing'
+                return (
+                  <div key={a._id} className="wf-article-card"
+                    onClick={() => navigate(`/blog/${a._id}`)}>
+                    <div className="wf-card-author">
+                      <div className="wf-card-avatar">{authorName[0]?.toUpperCase()}</div>
+                      <span className="wf-card-author-name">{authorName}</span>
+                    </div>
+                    <div className="wf-card-title">{a.title}</div>
+                    <div className="wf-card-meta">
+                      <span>{a.readTime} min read</span>
+                      <span className="wf-card-tag">{tag}</span>
+                      <span style={{marginLeft:'auto'}}>{a.claps} claps</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* STAFF PICKS — always shown */}
         <section className="wf-articles-section">
           <div className="wf-section-label">Staff Picks</div>
           <div className="wf-articles-grid">
-            {ARTICLES.map(a => (
+            {SEED_ARTICLES.map(a => (
               <div key={a.id} className="wf-article-card" onClick={goToBlog}>
                 <div className="wf-card-author">
                   <div className="wf-card-avatar">{a.author[0]}</div>
@@ -171,7 +213,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── AD 2 — between staff picks and dark strip ── */}
+        {/* AD 2 */}
         <div style={{ padding: '0 40px 40px', display: 'flex', justifyContent: 'center', background: '#F7F4ED' }}>
           <AdBanner slot="horizontal" />
         </div>
@@ -193,30 +235,39 @@ export default function HomePage() {
 
         {/* MORE STORIES */}
         <section className="wf-more-section">
-          <div className="wf-section-label">From The WriteFlow Blog</div>
-          {MORE.map((a, i) => (
-            <div key={a.id} className="wf-more-row" onClick={goToBlog}>
-              <div>
-                <div className="wf-more-title">{a.title}</div>
-                <div className="wf-more-sub">{a.sub}</div>
-                <div className="wf-more-meta">
-                  <div style={{width:18,height:18,borderRadius:'50%',background:'#1a1a1a',
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    color:'#F7F4ED',fontSize:8,fontWeight:700,flexShrink:0}}>{a.author[0]}</div>
-                  <span>{a.author}</span>
-                  <span>·</span>
-                  <span>{a.mins} min read</span>
-                  <span style={{background:'#ede8df',borderRadius:'100px',padding:'2px 10px',fontSize:11,color:'#5a5040'}}>{a.tag}</span>
+          <div className="wf-section-label">
+            {realArticles.length > 0 ? 'From Our Community' : 'From The WriteFlow Blog'}
+          </div>
+          {(realArticles.length > 0 ? realArticles.slice(0, 5) : SEED_MORE).map((a, i) => {
+            const authorName = a.author?.name || 'Unknown'
+            const tag = a.tags?.[0] || 'Writing'
+            return (
+              <div key={a._id} className="wf-more-row"
+                onClick={() => a.seed ? goToBlog() : navigate(`/blog/${a._id}`)}>
+                <div>
+                  <div className="wf-more-title">{a.title}</div>
+                  <div className="wf-more-sub">{a.subtitle || ''}</div>
+                  <div className="wf-more-meta">
+                    <div style={{width:18,height:18,borderRadius:'50%',background:'#1a1a1a',
+                      display:'flex',alignItems:'center',justifyContent:'center',
+                      color:'#F7F4ED',fontSize:8,fontWeight:700,flexShrink:0}}>
+                      {authorName[0]?.toUpperCase()}
+                    </div>
+                    <span>{authorName}</span>
+                    <span>·</span>
+                    <span>{a.readTime} min read</span>
+                    <span style={{background:'#ede8df',borderRadius:'100px',padding:'2px 10px',fontSize:11,color:'#5a5040'}}>{tag}</span>
+                  </div>
+                </div>
+                <div className="wf-more-thumb" style={{background: thumbGrads[i % thumbGrads.length]}}>
+                  <span style={{color:'rgba(255,255,255,0.2)',fontSize:22,fontFamily:"'Source Serif 4',serif"}}>W</span>
                 </div>
               </div>
-              <div className="wf-more-thumb" style={{background: thumbGrads[i % thumbGrads.length]}}>
-                <span style={{color:'rgba(255,255,255,0.2)',fontSize:22,fontFamily:"'Source Serif 4',serif"}}>W</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </section>
 
-        {/* ── AD 3 — bottom of page ── */}
+        {/* AD 3 */}
         <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', borderTop: '1px solid #d4c9b0', background: '#F7F4ED' }}>
           <AdBanner slot="horizontal" />
         </div>
