@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../utils/api'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
@@ -14,13 +14,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('admin_token')
     if (!token) { navigate('/admin/login'); return }
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
     fetchDashboard()
   }, [])
 
   const fetchDashboard = async () => {
     try {
-      const res = await axios.get('/api/admin/dashboard')
+      const res = await api.get('/api/admin/dashboard')
       setStats(res.data.stats)
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
 
   const handleToggle = async (id) => {
     try {
-      const res = await axios.patch(`/api/admin/users/${id}/toggle`)
+      const res = await api.patch(`/api/admin/users/${id}/toggle`)
       setUsers(u => u.map(x => x._id === id ? { ...x, isActive: res.data.isActive } : x))
       showMsg(res.data.message)
     } catch (err) { showMsg(err.response?.data?.message || 'Error', true) }
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
   const handleDelete = async (id) => {
     if (!window.confirm('Permanently delete this user?')) return
     try {
-      await axios.delete(`/api/admin/users/${id}`)
+      await api.delete(`/api/admin/users/${id}`)
       setUsers(u => u.filter(x => x._id !== id))
       showMsg('User deleted')
     } catch (err) { showMsg(err.response?.data?.message || 'Error', true) }

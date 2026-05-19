@@ -3,7 +3,7 @@ import AuthModal from '../components/AuthModal'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import AdBanner from '../components/AdBanner'
-import axios from 'axios'
+import api from '../utils/api'
 
 const fontLink = document.createElement('link')
 fontLink.rel = 'stylesheet'
@@ -92,7 +92,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    axios.get('/api/articles')
+    api.get('/api/articles')
       .then(res => setRealArticles(res.data.articles || []))
       .catch(() => setRealArticles([]))
       .finally(() => setLoading(false))

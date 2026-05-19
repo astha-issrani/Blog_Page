@@ -62,6 +62,21 @@ const Icon = ({ children, title, onClick, active }) => (
   >{children}</button>
 );
 
+// ── Helper: build FormData for both publish and draft ────────────────────────
+function buildFormData({ title, subtitle, body, tags, status, fileRef }) {
+  const formData = new FormData();
+  formData.append("title", title.trim());
+  formData.append("subtitle", subtitle.trim());
+  formData.append("content", body.trim());
+  formData.append("tags", JSON.stringify(tags));
+  formData.append("status", status);
+  if (fileRef.current?.files[0]) {
+    formData.append("coverImage", fileRef.current.files[0]);
+  }
+  return formData;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function WritePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -127,18 +142,22 @@ export default function WritePage() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setCoverImage(ev.target.result);
+    reader.onload = (ev) => setCoverImage(ev.target.result); // preview only
     reader.readAsDataURL(file);
   };
 
+  // ── Save draft (includes image) ──────────────────────────────────────────
   const handleSaveDraft = async () => {
     if (!title.trim()) return;
     try {
       const token = localStorage.getItem("wf_token");
-      await axios.post("/api/articles",
-        { title, subtitle, content: body, tags, status: "draft" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const formData = buildFormData({ title, subtitle, body, tags, status: "draft", fileRef });
+      await axios.post("/api/articles", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
@@ -154,26 +173,21 @@ export default function WritePage() {
     setShowPublishModal(true);
   };
 
-  // ── THIS IS THE KEY FIX — actually calls the API ──
+  // ── Confirm publish (includes image) ────────────────────────────────────
   const confirmPublish = async () => {
     setPublishing(true);
     setError("");
     try {
       const token = localStorage.getItem("wf_token");
-      await axios.post(
-        "/api/articles",
-        {
-          title: title.trim(),
-          subtitle: subtitle.trim(),
-          content: body.trim(),
-          tags,
-          status: "published",
+      const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
+      await axios.post("/api/articles", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      });
       setPublished(true);
       setShowPublishModal(false);
-      // Go to homepage after 1 second so user sees the success state
       setTimeout(() => navigate("/"), 1200);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to publish. Please try again.");
@@ -212,7 +226,8 @@ export default function WritePage() {
           {coverImage ? (
             <div style={{ position: "relative" }}>
               <img src={coverImage} alt="cover" style={STYLES.coverImg} />
-              <button onClick={() => setCoverImage(null)} style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "99px", padding: "4px 12px", cursor: "pointer", fontSize: "12px" }}>
+              <button onClick={() => { setCoverImage(null); if (fileRef.current) fileRef.current.value = ""; }}
+                style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "99px", padding: "4px 12px", cursor: "pointer", fontSize: "12px" }}>
                 Remove
               </button>
             </div>
@@ -224,6 +239,7 @@ export default function WritePage() {
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
               <span style={STYLES.coverPlaceholderText}>Add a cover image</span>
+              {/* ✅ Single file input — ref used by both draft and publish */}
               <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverChange}/>
             </div>
           )}
@@ -294,6 +310,10 @@ export default function WritePage() {
               <p style={STYLES.modalPreviewBody}>
                 {subtitle || (body ? body.slice(0, 120) + (body.length > 120 ? "…" : "") : "No subtitle")}
               </p>
+              {coverImage && (
+                <img src={coverImage} alt="cover preview"
+                  style={{ width: "100%", maxHeight: "120px", objectFit: "cover", borderRadius: "4px", marginBottom: "12px" }} />
+              )}
               {tags.length > 0 && (
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   {tags.map(t => (

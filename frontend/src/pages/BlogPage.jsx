@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AdBanner from "../components/AdBanner";
-import axios from "axios";
+import api from '../utils/api'
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
@@ -133,13 +133,13 @@ export default function BlogPage() {
     setLoading(true)
     setError(null)
 
-    axios.get(`/api/articles/${id}`)
+    api.get(`/api/articles/${id}`)
       .then(res => {
         const a = res.data.article
         setArticle(a)
         setClapCount(a.claps ?? 0)
         // fetch related articles for sidebar
-        return axios.get('/api/articles')
+        return api.get('/api/articles')
       })
       .then(res => {
         const all = res.data.articles || []
@@ -156,7 +156,7 @@ export default function BlogPage() {
   const handleClap = async () => {
     if (!user) return          // optionally prompt login
     try {
-      const res = await axios.post(`/api/articles/${id}/clap`)
+      const res = await api.post(`/api/articles/${id}/clap`)
       setClapped(res.data.clapped)
       setClapCount(res.data.claps)
     } catch {
