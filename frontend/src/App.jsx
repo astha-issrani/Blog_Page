@@ -10,7 +10,7 @@ import WritePage from './pages/WritePage'
 import BlogPage from './pages/BlogPage'
 import MyDrafts from './pages/MyDrafts'
 
-const STANDALONE = ['/admin/login', '/admin/dashboard']
+const STANDALONE = ['/admin/login', '/admin/dashboard', '/write']
 
 function Layout() {
   const location = useLocation()
