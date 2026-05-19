@@ -113,8 +113,7 @@ export default function HomePage() {
     else setModal('register')
   }
 
-  const goToBlog = () => navigate('/blog')
-
+  const goToBlog = () => navigate('/dummy-blog');
   return (
     <>
       <style>{styles}</style>

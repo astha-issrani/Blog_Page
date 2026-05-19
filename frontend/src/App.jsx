@@ -9,6 +9,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import WritePage from './pages/WritePage'
 import BlogPage from './pages/BlogPage'
 import MyDrafts from './pages/MyDrafts'
+import DummyBlog from './pages/DummyBlog'
 
 
 const STANDALONE = ['/admin/login', '/admin/dashboard', '/write']
@@ -45,6 +46,7 @@ function Layout() {
             <a href="/" style={{ color: '#1a1a1a', fontSize: 15, fontFamily: "'DM Sans',sans-serif" }}>← Go back home</a>
           </div>
         } />
+        <Route path="/dummy-blog" element={<DummyBlog />} />
       </Routes>
 
       {!isStandalone && (
