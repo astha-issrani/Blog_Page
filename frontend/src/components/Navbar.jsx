@@ -21,6 +21,18 @@ export default function Navbar() {
   const initials = user?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'U'
   const isAdmin = user?.role === 'admin'
 
+  const menuItem = (label, onClick) => (
+    <button onClick={onClick} style={{
+      display: 'block', width: '100%', padding: '11px 16px', textAlign: 'left',
+      fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: '#1a1a1a',
+      background: 'none', border: 'none', borderBottom: '1px solid #f5f5f5',
+      cursor: 'pointer',
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
+      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+    >{label}</button>
+  )
+
   return (
     <>
       <nav style={{
@@ -85,7 +97,6 @@ export default function Navbar() {
                   cursor: 'pointer', userSelect: 'none', position: 'relative'
                 }}>
                   {initials}
-                  {/* Gold dot indicator for admin */}
                   {isAdmin && (
                     <span style={{
                       position: 'absolute', bottom: 0, right: 0,
@@ -133,23 +144,18 @@ export default function Navbar() {
                       </button>
                     )}
 
-                    <button onClick={() => { setDropdown(false); navigate('/dashboard') }} style={{
-                      display: 'block', width: '100%', padding: '11px 16px', textAlign: 'left',
-                      fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: '#1a1a1a',
-                      background: 'none', border: 'none', borderBottom: '1px solid #f5f5f5', cursor: 'pointer'
-                    }}>My Stories</button>
-
-                    <button onClick={() => { setDropdown(false); navigate('/bookmarks') }} style={{
-                      display: 'block', width: '100%', padding: '11px 16px', textAlign: 'left',
-                      fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: '#1a1a1a',
-                      background: 'none', border: 'none', borderBottom: '1px solid #f5f5f5', cursor: 'pointer'
-                    }}>Bookmarks</button>
+                    {menuItem('My Stories', () => { setDropdown(false); navigate('/dashboard') })}
+                    {menuItem('My Drafts', () => { setDropdown(false); navigate('/drafts') })}
+                    {menuItem('Bookmarks', () => { setDropdown(false); navigate('/bookmarks') })}
 
                     <button onClick={() => { logout(); setDropdown(false); navigate('/') }} style={{
                       display: 'block', width: '100%', padding: '11px 16px', textAlign: 'left',
                       fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: '#7a6f5e',
                       background: 'none', border: 'none', cursor: 'pointer'
-                    }}>Sign out</button>
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >Sign out</button>
                   </div>
                 )}
               </div>

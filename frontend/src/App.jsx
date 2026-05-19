@@ -8,6 +8,7 @@ import TermsAndConditions from './pages/TermsAndConditions'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import WritePage from './pages/WritePage'
 import BlogPage from './pages/BlogPage'
+import MyDrafts from './pages/MyDrafts'
 
 const STANDALONE = ['/admin/login', '/admin/dashboard']
 
@@ -21,17 +22,17 @@ function Layout() {
       {!isStandalone && <Navbar />}
 
       <Routes>
-        <Route path="/"               element={<Home />} />
-        {/* Both /blog and /blog/:id render BlogPage — :id is optional */}
-        <Route path="/blog"           element={<BlogPage />} />
-        <Route path="/blog/:id"       element={<BlogPage />} />
-        <Route path="/write"          element={<WritePage />} />
-        <Route path="/terms"          element={<TermsAndConditions />} />
-        <Route path="/privacy"        element={<PrivacyPolicy />} />
+        <Route path="/"                 element={<Home />} />
+        <Route path="/blog"             element={<BlogPage />} />
+        <Route path="/blog/:id"         element={<BlogPage />} />
+        <Route path="/write"            element={<WritePage />} />
+        <Route path="/drafts"           element={<MyDrafts />} />
+        <Route path="/terms"            element={<TermsAndConditions />} />
+        <Route path="/privacy"          element={<PrivacyPolicy />} />
 
-        <Route path="/admin"          element={<Navigate to="/admin/login" replace />} />
-        <Route path="/admin/login"    element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin"            element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login"      element={<AdminLogin />} />
+        <Route path="/admin/dashboard"  element={<AdminDashboard />} />
 
         <Route path="*" element={
           <div style={{

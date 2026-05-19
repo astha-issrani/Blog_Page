@@ -17,11 +17,21 @@ const STYLES = {
   navRight: style({ display: "flex", alignItems: "center", gap: "16px" }),
   publishBtn: style({ background: T.green, color: T.white, border: "none", borderRadius: "99px", padding: "10px 24px", fontSize: "14px", fontFamily: "'Georgia', serif", cursor: "pointer", fontWeight: "600", letterSpacing: "0.2px", transition: "background 0.2s" }),
   saveDraftBtn: style({ background: "transparent", color: T.muted, border: "none", fontSize: "14px", fontFamily: "'Georgia', serif", cursor: "pointer", padding: "10px 16px", borderRadius: "99px", transition: "color 0.2s, background 0.2s" }),
-  editorWrap: style({ maxWidth: "740px", margin: "0 auto", padding: "60px 24px 120px" }),
-  coverArea: style({ width: "100%", marginBottom: "40px", borderRadius: "4px", overflow: "hidden" }),
-  coverImg: style({ width: "100%", maxHeight: "380px", objectFit: "cover", display: "block" }),
-  coverPlaceholder: style({ width: "100%", height: "220px", border: `2px dashed ${T.border}`, borderRadius: "4px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", cursor: "pointer", transition: "border-color 0.2s, background 0.2s" }),
+
+  // Full-width cover — sits directly below nav, outside editorWrap
+  coverArea: style({ width: "100%" }),
+  coverImg: style({ width: "100%", maxHeight: "420px", objectFit: "cover", display: "block" }),
+  coverPlaceholder: style({
+    width: "100%", height: "180px",
+    borderBottom: `2px dashed ${T.border}`,
+    display: "flex", flexDirection: "column", alignItems: "center",
+    justifyContent: "center", gap: "10px", cursor: "pointer",
+    background: "rgba(0,0,0,0.02)",
+    transition: "border-color 0.2s, background 0.2s",
+  }),
   coverPlaceholderText: style({ color: T.muted, fontSize: "14px", fontFamily: "'Georgia', serif" }),
+
+  editorWrap: style({ maxWidth: "740px", margin: "0 auto", padding: "48px 24px 120px" }),
   titleInput: style({ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "42px", fontWeight: "700", fontFamily: "'Georgia', 'Times New Roman', serif", color: T.ink, lineHeight: "1.2", resize: "none", marginBottom: "8px", letterSpacing: "-1px" }),
   subtitleInput: style({ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "22px", fontFamily: "'Georgia', serif", color: T.muted, lineHeight: "1.4", resize: "none", marginBottom: "32px" }),
   divider: style({ width: "100%", height: "1px", background: T.border, marginBottom: "32px" }),
@@ -64,14 +74,8 @@ export default function WritePage() {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
-
-  // ── TWO separate states for cover image ──────────────────────────────────
-  // coverPreview: base64 string just for showing the preview in the UI
-  // coverFile: the actual File object sent to the backend
   const [coverPreview, setCoverPreview] = useState(null);
-  const [coverFile, setCoverFile] = useState(null);   // ← THIS is the fix
-  // ─────────────────────────────────────────────────────────────────────────
-
+  const [coverFile, setCoverFile] = useState(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
@@ -120,13 +124,12 @@ export default function WritePage() {
     if (e.key === "Backspace" && !tagInput && tags.length) setTags(tags.slice(0, -1));
   };
 
-  // ── Store BOTH the File object and a preview URL ─────────────────────────
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setCoverFile(file);                          // ← store File in state
+    setCoverFile(file);
     const reader = new FileReader();
-    reader.onload = (ev) => setCoverPreview(ev.target.result);  // ← store preview
+    reader.onload = (ev) => setCoverPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -136,7 +139,6 @@ export default function WritePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ── Build FormData using coverFile from state (not from ref) ─────────────
   const buildFormData = (status) => {
     const formData = new FormData();
     formData.append("title", title.trim());
@@ -144,17 +146,14 @@ export default function WritePage() {
     formData.append("content", body.trim());
     formData.append("tags", JSON.stringify(tags));
     formData.append("status", status);
-    if (coverFile) {
-      formData.append("coverImage", coverFile);  // ← use state, not ref
-    }
+    if (coverFile) formData.append("coverImage", coverFile);
     return formData;
   };
 
   const handleSaveDraft = async () => {
     if (!title.trim()) return;
     try {
-      const formData = buildFormData("draft");
-      await api.post("/api/articles", formData);
+      await api.post("/api/articles", buildFormData("draft"));
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
@@ -174,11 +173,7 @@ export default function WritePage() {
     setPublishing(true);
     setError("");
     try {
-      const formData = buildFormData("published");
-      console.log("coverFile in state:", coverFile);
-      console.log("FormData coverImage:", formData.get("coverImage"));
-      const res = await api.post("/api/articles", formData);
-      console.log("Saved coverImage URL:", res.data.article?.coverImage);
+      await api.post("/api/articles", buildFormData("published"));
       setPublished(true);
       setShowPublishModal(false);
       setTimeout(() => navigate("/"), 1200);
@@ -190,7 +185,8 @@ export default function WritePage() {
 
   return (
     <div style={STYLES.page}>
-      {/* NAV */}
+
+      {/* ── NAV ── */}
       <nav style={STYLES.nav}>
         <a href="/" style={STYLES.logo}>WriteFlow</a>
         <div style={STYLES.navRight}>
@@ -212,41 +208,45 @@ export default function WritePage() {
         </div>
       </nav>
 
-      {/* EDITOR */}
+      {/* ── COVER IMAGE — full width, directly under nav, outside editorWrap ── */}
+      <div style={STYLES.coverArea}>
+        {/* File input always in DOM */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={handleCoverChange}
+        />
+
+        {coverPreview ? (
+          <div style={{ position: "relative" }}>
+            <img src={coverPreview} alt="cover" style={STYLES.coverImg} />
+            <button
+              onClick={removeCover}
+              style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: "99px", padding: "6px 16px", cursor: "pointer", fontSize: "13px", fontFamily: "'Georgia', serif" }}>
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div
+            style={STYLES.coverPlaceholder}
+            onClick={() => fileInputRef.current?.click()}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(45,106,45,0.04)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.muted} strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span style={STYLES.coverPlaceholderText}>Add a cover image</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── EDITOR ── */}
       <div style={STYLES.editorWrap}>
-
-        {/* Cover image — file input always in DOM, just hidden */}
-        <div style={STYLES.coverArea}>
-          {/* ── File input is ALWAYS mounted so ref never breaks ── */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={handleCoverChange}
-          />
-
-          {coverPreview ? (
-            <div style={{ position: "relative" }}>
-              <img src={coverPreview} alt="cover" style={STYLES.coverImg} />
-              <button onClick={removeCover}
-                style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "99px", padding: "4px 12px", cursor: "pointer", fontSize: "12px" }}>
-                Remove
-              </button>
-            </div>
-          ) : (
-            <div style={STYLES.coverPlaceholder}
-              onClick={() => fileInputRef.current?.click()}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = T.greenMuted; e.currentTarget.style.background = "rgba(45,106,45,0.03)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.muted} strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-              </svg>
-              <span style={STYLES.coverPlaceholderText}>Add a cover image</span>
-            </div>
-          )}
-        </div>
-
         <textarea ref={titleRef} style={STYLES.titleInput} placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} rows={1}/>
         <textarea style={STYLES.subtitleInput} placeholder="Write a subtitle…" value={subtitle} onChange={e => setSubtitle(e.target.value)} rows={1}/>
         <div style={STYLES.divider}/>
@@ -287,14 +287,14 @@ export default function WritePage() {
         </div>
       </div>
 
-      {/* STATUS BAR */}
+      {/* ── STATUS BAR ── */}
       <div style={STYLES.statusBar}>
         <span><span style={STYLES.dot}/>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
         <span>{readTime} min read</span>
         {title && <span style={{ marginLeft: "auto", color: T.greenMuted }}>{title.slice(0, 48)}{title.length > 48 ? "…" : ""}</span>}
       </div>
 
-      {/* PUBLISH MODAL */}
+      {/* ── PUBLISH MODAL ── */}
       {showPublishModal && (
         <div style={STYLES.modal} onClick={() => setShowPublishModal(false)}>
           <div style={STYLES.modalBox} onClick={e => e.stopPropagation()}>
@@ -308,14 +308,14 @@ export default function WritePage() {
             )}
 
             <div style={{ background: T.cream, borderRadius: "6px", padding: "16px 20px", marginBottom: "20px" }}>
-              <p style={STYLES.modalPreviewTitle}>{title || "Untitled"}</p>
-              <p style={STYLES.modalPreviewBody}>
-                {subtitle || (body ? body.slice(0, 120) + (body.length > 120 ? "…" : "") : "No subtitle")}
-              </p>
               {coverPreview && (
                 <img src={coverPreview} alt="cover preview"
                   style={{ width: "100%", maxHeight: "120px", objectFit: "cover", borderRadius: "4px", marginBottom: "12px" }} />
               )}
+              <p style={STYLES.modalPreviewTitle}>{title || "Untitled"}</p>
+              <p style={STYLES.modalPreviewBody}>
+                {subtitle || (body ? body.slice(0, 120) + (body.length > 120 ? "…" : "") : "No subtitle")}
+              </p>
               {tags.length > 0 && (
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                   {tags.map(t => (
