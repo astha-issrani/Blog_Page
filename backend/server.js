@@ -7,9 +7,9 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const articleRoutes = require('./routes/articles');
-app.use('/uploads', express.static('uploads'));
-const app = express();
 
+const app = express();
+app.use('/uploads', express.static('uploads'));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -24,6 +24,16 @@ const authLimiter = rateLimit({
 });
 
 // Middleware
+// ── CORS — must be FIRST, before any routes ──────────────────
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://blog-page-gray-gamma.vercel.app');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin,Content-Type,Accept,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204); // preflight
+  next();
+});
+
 app.use(cors({
   origin: [
     'https://blog-page-gray-gamma.vercel.app',
