@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from '../utils/api';
 import { useAuth } from "../context/AuthContext";
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const T = {
   cream: "#F2EFE9", ink: "#1A1A1A", green: "#2D6A2D", greenLight: "#3D8B3D",
@@ -308,7 +309,7 @@ export default function WritePage() {
               .wf-preview em { font-style: italic; }
             `}</style>
             <div className="wf-preview">
-              <ReactMarkdown>{body || '*Nothing to preview yet…*'}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body || '*Nothing to preview yet…*'}</ReactMarkdown>
             </div>
           </div>
         ) : (

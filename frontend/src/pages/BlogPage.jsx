@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import AdBanner from "../components/AdBanner";
 import api from '../utils/api';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
@@ -263,6 +264,7 @@ export default function BlogPage() {
     .wf-body em   { font-style: italic; }
   `}</style>
   <ReactMarkdown
+  remarkPlugins={[remarkGfm]}
   components={{
     a: ({ href, children }) => (
       <a href={href} target="_blank" rel="noopener noreferrer">
