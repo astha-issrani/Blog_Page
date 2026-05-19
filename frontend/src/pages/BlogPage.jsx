@@ -18,6 +18,11 @@ const styles = `
   .wf-page { width: 100%; display: grid; grid-template-columns: 1fr 320px; gap: 0; }
   .wf-main { min-width: 0; padding: 48px 80px 48px 80px; }
   .wf-sidebar { padding: 48px 40px 48px 40px; border-left: 1px solid var(--border); }
+
+  /* ── Cover image ── */
+  .wf-cover { width: 100%; margin-bottom: 40px; border-radius: 4px; overflow: hidden; }
+  .wf-cover img { width: 100%; max-height: 480px; object-fit: cover; display: block; border-radius: 4px; }
+
   .wf-title { font-family: var(--serif); font-size: 42px; font-weight: 700; line-height: 52px; letter-spacing: -0.5px; color: #000; margin-bottom: 16px; }
   .wf-subtitle { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 32px; color: var(--text-secondary); margin-bottom: 28px; }
   .wf-byline { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -43,7 +48,6 @@ const styles = `
   .wf-card-inner { display: flex; gap: 12px; align-items: flex-start; }
   .wf-card-avatar { width: 50px; height: 50px; border-radius: 50%; background: #000; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 700; font-family: var(--serif); flex-shrink: 0; }
   .wf-card-name { font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
-  .wf-card-followers { font-family: var(--sans); font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
   .wf-card-bio { font-family: var(--sans); font-size: 14px; color: var(--text-primary); line-height: 20px; margin-bottom: 8px; }
   .wf-sb-author { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .wf-sb-avatar { width: 38px; height: 38px; border-radius: 50%; background: #000; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 700; font-family: var(--serif); flex-shrink: 0; }
@@ -57,9 +61,8 @@ const styles = `
   .wf-sb-rec-title { font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 21px; margin-bottom: 5px; cursor: pointer; }
   .wf-sb-rec-title:hover { text-decoration: underline; }
   .wf-sb-rec-meta { font-family: var(--sans); font-size: 12px; color: var(--text-secondary); }
+  .wf-sb-rec-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
   .wf-mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); padding: 10px 24px; z-index: 50; align-items: center; justify-content: space-between; }
-
-  /* Loading / Error states */
   .wf-center-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; font-family: var(--sans); }
   .wf-spinner { width: 36px; height: 36px; border: 3px solid #eee; border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -67,7 +70,6 @@ const styles = `
   .wf-error-msg { font-size: 18px; color: var(--text-secondary); }
   .wf-back-btn { margin-top: 8px; font-family: var(--sans); font-size: 15px; color: #000; background: none; border: 1px solid #000; border-radius: 100px; padding: 10px 24px; cursor: pointer; }
   .wf-back-btn:hover { background: #000; color: #fff; }
-
   @media (max-width: 900px) {
     .wf-page { grid-template-columns: 1fr; }
     .wf-main { padding: 32px 24px 80px; }
@@ -101,7 +103,7 @@ function formatDate(dateStr) {
 }
 
 export default function BlogPage() {
-  const { id } = useParams()           // undefined when at /blog, a mongo id when at /blog/:id
+  const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
 
@@ -112,14 +114,10 @@ export default function BlogPage() {
   const [clapped, setClapped]     = useState(false)
   const [clapCount, setClapCount] = useState(0)
 
-  // ── If no id, go to the home feed ──────────────────────────────────────
   useEffect(() => {
-    if (!id) {
-      navigate('/', { replace: true })
-    }
+    if (!id) navigate('/', { replace: true })
   }, [id, navigate])
 
-  // ── Inject styles ──────────────────────────────────────────────────────
   useEffect(() => {
     const el = document.createElement("style")
     el.textContent = styles
@@ -127,7 +125,6 @@ export default function BlogPage() {
     return () => document.head.removeChild(el)
   }, [])
 
-  // ── Fetch the article ──────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return
     setLoading(true)
@@ -138,7 +135,6 @@ export default function BlogPage() {
         const a = res.data.article
         setArticle(a)
         setClapCount(a.claps ?? 0)
-        // fetch related articles for sidebar
         return api.get('/api/articles')
       })
       .then(res => {
@@ -152,26 +148,22 @@ export default function BlogPage() {
       .finally(() => setLoading(false))
   }, [id])
 
-  // ── Clap handler ───────────────────────────────────────────────────────
   const handleClap = async () => {
-    if (!user) return          // optionally prompt login
+    if (!user) return
     try {
       const res = await api.post(`/api/articles/${id}/clap`)
       setClapped(res.data.clapped)
       setClapCount(res.data.claps)
     } catch {
-      // optimistic fallback
       setClapped(c => !c)
       setClapCount(c => clapped ? c - 1 : c + 1)
     }
   }
 
-  // ── ClapButton sub-component ───────────────────────────────────────────
   const ClapButton = ({ size = "normal" }) => (
     <button className="wf-icon-btn" onClick={handleClap} style={{ gap: size === "mobile" ? 8 : 6 }}>
       <span className={`wf-clap-ring ${clapped ? "active" : ""}`}>
-        <svg width="16" height="16" viewBox="0 0 24 24"
-          fill={clapped ? "#fff" : "currentColor"}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={clapped ? "#fff" : "currentColor"}>
           <path d="M14.828 3.172a4 4 0 015.656 5.656L12 17.314l-8.485-8.486a4 4 0 015.657-5.656L12 6.343l2.828-3.171z"/>
         </svg>
       </span>
@@ -181,7 +173,6 @@ export default function BlogPage() {
     </button>
   )
 
-  // ── Loading ────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="wf-wrap">
@@ -193,14 +184,13 @@ export default function BlogPage() {
     )
   }
 
-  // ── Error ──────────────────────────────────────────────────────────────
   if (error || !article) {
     return (
       <div className="wf-wrap">
         <div className="wf-center-state">
           <div className="wf-error-code">{error === 'notfound' ? '404' : '500'}</div>
           <div className="wf-error-msg">
-            {error === 'notfound' ? 'This article doesnt exist or was removed.' : 'Something went wrong. Please try again.'}
+            {error === 'notfound' ? "This article doesn't exist or was removed." : 'Something went wrong. Please try again.'}
           </div>
           <button className="wf-back-btn" onClick={() => navigate('/')}>← Back to home</button>
         </div>
@@ -208,16 +198,25 @@ export default function BlogPage() {
     )
   }
 
-  // ── Render article ─────────────────────────────────────────────────────
-  const authorName  = article.author?.name  || 'Anonymous'
+  const authorName   = article.author?.name || 'Anonymous'
   const authorLetter = authorName[0]?.toUpperCase() || 'A'
 
   return (
     <div className="wf-wrap">
       <div className="wf-page">
 
-        {/* ── MAIN ── */}
         <main className="wf-main">
+
+          {/* ── COVER IMAGE — only shown when the article has one ── */}
+          {article.coverImage && (
+            <div className="wf-cover">
+              <img
+                src={article.coverImage}
+                alt={article.title}
+                onError={e => { e.target.style.display = 'none' }}
+              />
+            </div>
+          )}
 
           <h1 className="wf-title">{article.title}</h1>
           {article.subtitle && (
@@ -243,24 +242,20 @@ export default function BlogPage() {
             </div>
           </div>
 
-          {/* AD — after action bar */}
           <div style={{ margin: '0 0 40px', display: 'flex', justifyContent: 'center' }}>
             <AdBanner slot="horizontal" />
           </div>
 
-          {/* ── ARTICLE BODY ── */}
           <div className="wf-body">
             {article.content.split('\n\n').map((para, i) => (
               <p key={i}>{para}</p>
             ))}
           </div>
 
-          {/* AD — mid article */}
           <div style={{ margin: '0 0 40px', display: 'flex', justifyContent: 'center' }}>
             <AdBanner slot="horizontal" />
           </div>
 
-          {/* TAGS */}
           {article.tags?.length > 0 && (
             <div className="wf-tags">
               {article.tags.map(t => (
@@ -278,7 +273,6 @@ export default function BlogPage() {
             </div>
           </div>
 
-          {/* AUTHOR CARD */}
           <div className="wf-cards-grid">
             <div>
               <div className="wf-card-label">Written by</div>
@@ -317,6 +311,14 @@ export default function BlogPage() {
               <div className="wf-sb-section-title">More stories</div>
               {related.map(rec => (
                 <div key={rec._id} className="wf-sb-rec">
+                  {rec.coverImage && (
+                    <img
+                      src={rec.coverImage}
+                      alt={rec.title}
+                      className="wf-sb-rec-thumb"
+                      onError={e => { e.target.style.display = 'none' }}
+                    />
+                  )}
                   <div className="wf-sb-rec-pub">
                     <span className="wf-sb-rec-dot">
                       {(rec.author?.name || 'A')[0].toUpperCase()}
@@ -340,7 +342,6 @@ export default function BlogPage() {
 
       </div>
 
-      {/* MOBILE BOTTOM BAR */}
       <div className="wf-mobile-bar">
         <ClapButton size="mobile" />
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
