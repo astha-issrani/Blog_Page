@@ -31,7 +31,7 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('/api/admin/users')
+      const res = await api.get('/api/admin/users')
       setUsers(res.data.users)
     } catch {}
   }
@@ -160,6 +160,7 @@ export default function AdminDashboard() {
                   { label: 'Total Users', value: stats?.totalUsers ?? 0, color: '#1a1a1a' },
                   { label: 'Active Users', value: stats?.activeUsers ?? 0, color: '#3a7d2e' },
                   { label: 'Admin Accounts', value: stats?.admins ?? 0, color: '#7a3a2e' },
+                  { label: 'Total Articles', value: stats?.totalArticles ?? 0, color: '#2D6A2D' }
                 ].map(s2 => (
                   <div key={s2.label} style={s.statCard}>
                     <div style={{ ...s.statNum, color: s2.color }}>{s2.value}</div>
@@ -186,76 +187,85 @@ export default function AdminDashboard() {
 
           {/* USERS TAB */}
           {tab === 'users' && (
-            <>
-              <div style={s.pageTitle}>Users</div>
-              <div style={s.pageSub}>{users.length} registered users</div>
+  <>
+    <div style={s.pageTitle}>Users</div>
+    <div style={s.pageSub}>{users.length} registered users</div>
 
-              {users.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', color: '#7a6f5e', fontSize: 15 }}>
-                  No users yet.
+    {users.length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '60px 0', color: '#7a6f5e', fontSize: 15 }}>
+        No users yet.
+      </div>
+    ) : (
+      <table style={s.table}>
+        <thead>
+          <tr>
+            {['Name', 'Email', 'Joined', 'Articles', 'Status', 'Actions'].map(h => (
+              <th key={h} style={s.th}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(u => (
+            <tr key={u._id} style={{ background: u.isActive ? '#fff' : '#faf9f6' }}>
+              <td style={s.td}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1a1a1a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#f7f4ed', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                    {u.name[0].toUpperCase()}
+                  </div>
+                  <span style={{ fontWeight: 500 }}>{u.name}</span>
                 </div>
-              ) : (
-                <table style={s.table}>
-                  <thead>
-                    <tr>
-                      {['Name', 'Email', 'Joined', 'Last Login', 'Status', 'Actions'].map(h => (
-                        <th key={h} style={s.th}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => (
-                      <tr key={u._id} style={{ background: u.isActive ? '#fff' : '#faf9f6' }}>
-                        <td style={s.td}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1a1a1a',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: '#f7f4ed', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-                              {u.name[0].toUpperCase()}
-                            </div>
-                            <span style={{ fontWeight: 500 }}>{u.name}</span>
-                          </div>
-                        </td>
-                        <td style={{ ...s.td, color: '#7a6f5e' }}>{u.email}</td>
-                        <td style={{ ...s.td, color: '#7a6f5e' }}>
-                          {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </td>
-                        <td style={{ ...s.td, color: '#7a6f5e' }}>
-                          {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
-                        </td>
-                        <td style={s.td}>
-                          <span style={{
-                            fontSize: 12, fontWeight: 600, borderRadius: 100, padding: '3px 12px',
-                            background: u.isActive ? '#f0fdf4' : '#fef2f2',
-                            color: u.isActive ? '#15803d' : '#dc2626',
-                            border: `1px solid ${u.isActive ? '#bbf7d0' : '#fecaca'}`
-                          }}>
-                            {u.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td style={s.td}>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => handleToggle(u._id)} style={{
-                              fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer',
-                              fontFamily: "'DM Sans',sans-serif", border: '1px solid #d4c9b0',
-                              background: '#fff', color: '#1a1a1a'
-                            }}>
-                              {u.isActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button onClick={() => handleDelete(u._id)} style={{
-                              fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer',
-                              fontFamily: "'DM Sans',sans-serif", border: '1px solid #fecaca',
-                              background: '#fff', color: '#dc2626'
-                            }}>Delete</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
+              </td>
+              <td style={{ ...s.td, color: '#7a6f5e' }}>{u.email}</td>
+              <td style={{ ...s.td, color: '#7a6f5e' }}>
+                {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </td>
+              <td style={s.td}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: u.articleCount > 0 ? '#f0fdf4' : '#f7f4ed',
+                  color: u.articleCount > 0 ? '#15803d' : '#7a6f5e',
+                  fontSize: 13, fontWeight: 700,
+                  border: `1px solid ${u.articleCount > 0 ? '#bbf7d0' : '#d4c9b0'}`
+                }}>
+                  {u.articleCount ?? 0}
+                </span>
+              </td>
+              <td style={s.td}>
+                <span style={{
+                  fontSize: 12, fontWeight: 600, borderRadius: 100, padding: '3px 12px',
+                  background: u.isActive ? '#f0fdf4' : '#fef2f2',
+                  color: u.isActive ? '#15803d' : '#dc2626',
+                  border: `1px solid ${u.isActive ? '#bbf7d0' : '#fecaca'}`
+                }}>
+                  {u.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td style={s.td}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => handleToggle(u._id)} style={{
+                    fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer',
+                    fontFamily: "'DM Sans',sans-serif", border: '1px solid #d4c9b0',
+                    background: '#fff', color: '#1a1a1a'
+                  }}>
+                    {u.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button onClick={() => handleDelete(u._id)} style={{
+                    fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer',
+                    fontFamily: "'DM Sans',sans-serif", border: '1px solid #fecaca',
+                    background: '#fff', color: '#dc2626'
+                  }}>Delete</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </>
+)}
 
           {/* SETTINGS TAB */}
           {tab === 'settings' && (

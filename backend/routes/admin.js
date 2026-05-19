@@ -1,7 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
 const { protect, adminOnly } = require('../middleware/auth');
-
+const Article = require('../models/Article')
 const router = express.Router();
 
 // All admin routes require auth + admin role
@@ -24,6 +24,8 @@ router.get('/dashboard', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+const totalArticles = await Article.countDocuments()
+res.json({ stats: { totalUsers, activeUsers, admins, totalArticles } })
 
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
@@ -50,7 +52,23 @@ router.patch('/users/:id/toggle', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
+// GET /api/admin/users
+router.get('/users', protect, adminOnly, async (req, res) => {
+  try {
+    const users = await User.find({}).sort({ createdAt: -1 })
+    
+    // Get article count for each user
+    const usersWithCount = await Promise.all(
+      users.map(async (u) => {
+        const articleCount = await Article.countDocuments({ author: u._id })
+        return { ...u.toObject(), articleCount }
+      })
+    )
+    res.json({ users: usersWithCount })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+});
 // DELETE /api/admin/users/:id
 router.delete('/users/:id', async (req, res) => {
   try {
