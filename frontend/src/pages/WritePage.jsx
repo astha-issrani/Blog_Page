@@ -4,14 +4,8 @@ import api from '../utils/api';
 import { useAuth } from "../context/AuthContext";
 
 const T = {
-  cream: "#F2EFE9",
-  ink: "#1A1A1A",
-  green: "#2D6A2D",
-  greenLight: "#3D8B3D",
-  greenMuted: "#4a7c59",
-  border: "#D9D4CB",
-  muted: "#8A8278",
-  white: "#FFFFFF",
+  cream: "#F2EFE9", ink: "#1A1A1A", green: "#2D6A2D", greenLight: "#3D8B3D",
+  greenMuted: "#4a7c59", border: "#D9D4CB", muted: "#8A8278", white: "#FFFFFF",
 };
 
 const style = (obj) => obj;
@@ -62,21 +56,6 @@ const Icon = ({ children, title, onClick, active }) => (
   >{children}</button>
 );
 
-// ── Helper: build FormData for both publish and draft ────────────────────────
-function buildFormData({ title, subtitle, body, tags, status, fileRef }) {
-  const formData = new FormData();
-  formData.append("title", title.trim());
-  formData.append("subtitle", subtitle.trim());
-  formData.append("content", body.trim());
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("status", status);
-  if (fileRef.current?.files[0]) {
-    formData.append("coverImage", fileRef.current.files[0]);
-  }
-  return formData;
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function WritePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -85,7 +64,14 @@ export default function WritePage() {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
-  const [coverImage, setCoverImage] = useState(null);
+
+  // ── TWO separate states for cover image ──────────────────────────────────
+  // coverPreview: base64 string just for showing the preview in the UI
+  // coverFile: the actual File object sent to the backend
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);   // ← THIS is the fix
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
@@ -94,7 +80,7 @@ export default function WritePage() {
 
   const titleRef = useRef(null);
   const bodyRef = useRef(null);
-  const fileRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const autoResize = (el) => {
     if (!el) return;
@@ -104,11 +90,7 @@ export default function WritePage() {
 
   useEffect(() => { if (titleRef.current) autoResize(titleRef.current); }, [title]);
   useEffect(() => { if (bodyRef.current) autoResize(bodyRef.current); }, [body]);
-
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!user) navigate("/");
-  }, [user]);
+  useEffect(() => { if (!user) navigate("/"); }, [user]);
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
@@ -138,20 +120,40 @@ export default function WritePage() {
     if (e.key === "Backspace" && !tagInput && tags.length) setTags(tags.slice(0, -1));
   };
 
+  // ── Store BOTH the File object and a preview URL ─────────────────────────
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setCoverFile(file);                          // ← store File in state
     const reader = new FileReader();
-    reader.onload = (ev) => setCoverImage(ev.target.result); // preview only
+    reader.onload = (ev) => setCoverPreview(ev.target.result);  // ← store preview
     reader.readAsDataURL(file);
   };
 
-  // ── Save draft (includes image) ──────────────────────────────────────────
+  const removeCover = () => {
+    setCoverPreview(null);
+    setCoverFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Build FormData using coverFile from state (not from ref) ─────────────
+  const buildFormData = (status) => {
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("subtitle", subtitle.trim());
+    formData.append("content", body.trim());
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("status", status);
+    if (coverFile) {
+      formData.append("coverImage", coverFile);  // ← use state, not ref
+    }
+    return formData;
+  };
+
   const handleSaveDraft = async () => {
     if (!title.trim()) return;
     try {
-      
-      const formData = buildFormData({ title, subtitle, body, tags, status: "draft", fileRef });
+      const formData = buildFormData("draft");
       await api.post("/api/articles", formData);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -168,30 +170,23 @@ export default function WritePage() {
     setShowPublishModal(true);
   };
 
-  // ── Confirm publish (includes image) ────────────────────────────────────
- const confirmPublish = async () => {
-  setPublishing(true);
-  setError("");
-  try {
-    const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
-    
-    // ADD THESE LOGS
-    console.log("File exists?", fileRef.current?.files[0])
-    console.log("FormData coverImage:", formData.get("coverImage"))
-    
-    const res = await api.post("/api/articles", formData)
-    
-    // ADD THIS LOG
-    console.log("Response:", res.data.article?.coverImage)
-    
-    setPublished(true);
-    setShowPublishModal(false);
-    setTimeout(() => navigate("/"), 1200);
-  } catch (err) {
-    setError(err.response?.data?.message || "Failed to publish. Please try again.");
-    setPublishing(false);
-  }
-};
+  const confirmPublish = async () => {
+    setPublishing(true);
+    setError("");
+    try {
+      const formData = buildFormData("published");
+      console.log("coverFile in state:", coverFile);
+      console.log("FormData coverImage:", formData.get("coverImage"));
+      const res = await api.post("/api/articles", formData);
+      console.log("Saved coverImage URL:", res.data.article?.coverImage);
+      setPublished(true);
+      setShowPublishModal(false);
+      setTimeout(() => navigate("/"), 1200);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to publish. Please try again.");
+      setPublishing(false);
+    }
+  };
 
   return (
     <div style={STYLES.page}>
@@ -219,26 +214,35 @@ export default function WritePage() {
 
       {/* EDITOR */}
       <div style={STYLES.editorWrap}>
-        {/* Cover image */}
+
+        {/* Cover image — file input always in DOM, just hidden */}
         <div style={STYLES.coverArea}>
-          {coverImage ? (
+          {/* ── File input is ALWAYS mounted so ref never breaks ── */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleCoverChange}
+          />
+
+          {coverPreview ? (
             <div style={{ position: "relative" }}>
-              <img src={coverImage} alt="cover" style={STYLES.coverImg} />
-              <button onClick={() => { setCoverImage(null); if (fileRef.current) fileRef.current.value = ""; }}
+              <img src={coverPreview} alt="cover" style={STYLES.coverImg} />
+              <button onClick={removeCover}
                 style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "99px", padding: "4px 12px", cursor: "pointer", fontSize: "12px" }}>
                 Remove
               </button>
             </div>
           ) : (
-            <div style={STYLES.coverPlaceholder} onClick={() => fileRef.current?.click()}
+            <div style={STYLES.coverPlaceholder}
+              onClick={() => fileInputRef.current?.click()}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.greenMuted; e.currentTarget.style.background = "rgba(45,106,45,0.03)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.muted} strokeWidth="1.5">
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
               <span style={STYLES.coverPlaceholderText}>Add a cover image</span>
-              {/* ✅ Single file input — ref used by both draft and publish */}
-              <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverChange}/>
             </div>
           )}
         </div>
@@ -308,8 +312,8 @@ export default function WritePage() {
               <p style={STYLES.modalPreviewBody}>
                 {subtitle || (body ? body.slice(0, 120) + (body.length > 120 ? "…" : "") : "No subtitle")}
               </p>
-              {coverImage && (
-                <img src={coverImage} alt="cover preview"
+              {coverPreview && (
+                <img src={coverPreview} alt="cover preview"
                   style={{ width: "100%", maxHeight: "120px", objectFit: "cover", borderRadius: "4px", marginBottom: "12px" }} />
               )}
               {tags.length > 0 && (
