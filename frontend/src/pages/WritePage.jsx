@@ -274,7 +274,16 @@ export default function WritePage() {
           <Icon title="Bullet list"     onClick={() => insertMarkdown("\n- ", "")}>≡</Icon>
           <Icon title="Numbered list"   onClick={() => insertMarkdown("\n1. ", "")}>№</Icon>
           <div style={STYLES.toolSep}/>
-          <Icon title="Link"            onClick={() => insertMarkdown("[", "](url)")}>🔗</Icon>
+          <Icon title="Link" onClick={() => {
+  const el = bodyRef.current
+  if (!el) return
+  const sel = body.slice(el.selectionStart, el.selectionEnd)
+  if (sel) {
+    insertMarkdown("[", "](https://)")
+  } else {
+    insertMarkdown("[link text](https://", ")")
+  }
+}}>🔗</Icon>
           <Icon title="Horizontal rule" onClick={() => insertMarkdown("\n---\n", "")}>—</Icon>
           <div style={STYLES.toolSep}/>
           {/* Preview toggle button */}
