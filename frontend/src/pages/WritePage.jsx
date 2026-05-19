@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from '../utils/api';
 import { useAuth } from "../context/AuthContext";
+import ReactMarkdown from 'react-markdown';
 
 const T = {
   cream: "#F2EFE9", ink: "#1A1A1A", green: "#2D6A2D", greenLight: "#3D8B3D",
@@ -61,26 +62,19 @@ export default function WritePage() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // ── Check if we're editing an existing draft ─────────────────────────────
   const editingDraft = location.state?.draft || null;
   const draftId = location.state?.draftId || null;
   const isEditing = !!draftId;
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── Pre-fill from draft if editing, else empty ───────────────────────────
   const [title, setTitle]       = useState(editingDraft?.title    || "");
   const [subtitle, setSubtitle] = useState(editingDraft?.subtitle || "");
   const [body, setBody]         = useState(editingDraft?.content  || "");
   const [tags, setTags]         = useState(editingDraft?.tags     || []);
-  // ─────────────────────────────────────────────────────────────────────────
-
   const [tagInput, setTagInput] = useState("");
-
-  // Cover image: if draft already has one, show it as the preview
   const [coverPreview, setCoverPreview] = useState(editingDraft?.coverImage || null);
-  const [coverFile, setCoverFile]       = useState(null); // new file if user picks one
-
+  const [coverFile, setCoverFile]       = useState(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showPreview, setShowPreview]   = useState(false); // ← INSIDE component ✓
   const [saved, setSaved]       = useState(false);
   const [published, setPublished] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -143,7 +137,6 @@ export default function WritePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ── Build FormData ────────────────────────────────────────────────────────
   const buildFormData = (status) => {
     const formData = new FormData();
     formData.append("title",    title.trim());
@@ -152,22 +145,18 @@ export default function WritePage() {
     formData.append("tags",     JSON.stringify(tags));
     formData.append("status",   status);
     if (coverFile) {
-      // User picked a new image
       formData.append("coverImage", coverFile);
     } else if (coverPreview && coverPreview.startsWith("http")) {
-      // Existing Cloudinary URL from draft — pass it as a string
       formData.append("existingCoverImage", coverPreview);
     }
     return formData;
   };
 
-  // ── Save / update draft ───────────────────────────────────────────────────
   const handleSaveDraft = async () => {
     if (!title.trim()) return;
     try {
       const formData = buildFormData("draft");
       if (isEditing) {
-        // Update existing draft
         await api.put(`/api/articles/${draftId}`, formData);
       } else {
         await api.post("/api/articles", formData);
@@ -187,14 +176,12 @@ export default function WritePage() {
     setShowPublishModal(true);
   };
 
-  // ── Publish (new or from draft) ───────────────────────────────────────────
   const confirmPublish = async () => {
     setPublishing(true);
     setError("");
     try {
       const formData = buildFormData("published");
       if (isEditing) {
-        // Update the draft and mark as published
         await api.put(`/api/articles/${draftId}`, formData);
       } else {
         await api.post("/api/articles", formData);
@@ -214,11 +201,8 @@ export default function WritePage() {
       <nav style={STYLES.nav}>
         <a href="/" style={STYLES.logo}>WriteFlow</a>
         <div style={STYLES.navRight}>
-          {/* Show "Editing draft" badge when in edit mode */}
           {isEditing && (
-            <span style={{ fontSize: 12, color: T.muted, background: "#fef9c3",
-              border: "1px solid #fde68a", borderRadius: 100, padding: "4px 12px",
-              fontFamily: "'Georgia',serif", color: "#854d0e", fontWeight: 600 }}>
+            <span style={{ fontSize: 12, background: "#fef9c3", border: "1px solid #fde68a", borderRadius: 100, padding: "4px 12px", fontFamily: "'Georgia',serif", color: "#854d0e", fontWeight: 600 }}>
               Editing draft
             </span>
           )}
@@ -243,16 +227,9 @@ export default function WritePage() {
       {/* EDITOR */}
       <div style={STYLES.editorWrap}>
 
-        {/* Cover image — file input always mounted */}
+        {/* Cover image */}
         <div style={STYLES.coverArea}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={handleCoverChange}
-          />
-
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverChange} />
           {coverPreview ? (
             <div style={{ position: "relative" }}>
               <img src={coverPreview} alt="cover" style={STYLES.coverImg} />
@@ -284,23 +261,59 @@ export default function WritePage() {
         <textarea style={STYLES.subtitleInput} placeholder="Write a subtitle…" value={subtitle} onChange={e => setSubtitle(e.target.value)} rows={1}/>
         <div style={STYLES.divider}/>
 
-        {/* Toolbar */}
+        {/* TOOLBAR */}
         <div style={STYLES.toolbar}>
-          <Icon title="Bold"          onClick={() => insertMarkdown("**", "**")}><strong>B</strong></Icon>
-          <Icon title="Italic"        onClick={() => insertMarkdown("*", "*")}><em>I</em></Icon>
-          <Icon title="Heading"       onClick={() => insertMarkdown("\n## ", "\n")}>H</Icon>
+          <Icon title="Bold"            onClick={() => insertMarkdown("**", "**")}><strong>B</strong></Icon>
+          <Icon title="Italic"          onClick={() => insertMarkdown("*", "*")}><em>I</em></Icon>
+          <Icon title="Heading"         onClick={() => insertMarkdown("\n## ", "\n")}>H</Icon>
           <div style={STYLES.toolSep}/>
-          <Icon title="Quote"         onClick={() => insertMarkdown("\n> ", "\n")}>❝</Icon>
-          <Icon title="Code"          onClick={() => insertMarkdown("`", "`")}>{"</>"}</Icon>
+          <Icon title="Quote"           onClick={() => insertMarkdown("\n> ", "\n")}>❝</Icon>
+          <Icon title="Code"            onClick={() => insertMarkdown("`", "`")}>{"</>"}</Icon>
           <div style={STYLES.toolSep}/>
-          <Icon title="Bullet list"   onClick={() => insertMarkdown("\n- ", "")}>≡</Icon>
-          <Icon title="Numbered list" onClick={() => insertMarkdown("\n1. ", "")}>№</Icon>
+          <Icon title="Bullet list"     onClick={() => insertMarkdown("\n- ", "")}>≡</Icon>
+          <Icon title="Numbered list"   onClick={() => insertMarkdown("\n1. ", "")}>№</Icon>
           <div style={STYLES.toolSep}/>
-          <Icon title="Link"          onClick={() => insertMarkdown("[", "](url)")}>🔗</Icon>
+          <Icon title="Link"            onClick={() => insertMarkdown("[", "](url)")}>🔗</Icon>
           <Icon title="Horizontal rule" onClick={() => insertMarkdown("\n---\n", "")}>—</Icon>
+          <div style={STYLES.toolSep}/>
+          {/* Preview toggle button */}
+          <button
+            onClick={() => setShowPreview(p => !p)}
+            style={{
+              ...STYLES.toolBtn,
+              background: showPreview ? "#e8e3db" : "transparent",
+              color: showPreview ? T.ink : T.muted,
+              fontSize: 13, padding: "6px 14px", borderRadius: 4,
+              fontFamily: "'Georgia', serif",
+            }}>
+            {showPreview ? 'Edit' : 'Preview'}
+          </button>
         </div>
 
-        <textarea ref={bodyRef} style={STYLES.bodyEditor} placeholder="Tell your story…" value={body} onChange={e => setBody(e.target.value)} rows={16}/>
+        {/* EDITOR OR PREVIEW — toggled by showPreview */}
+        {showPreview ? (
+          <div style={{ minHeight: 400, fontSize: 20, lineHeight: 1.8, fontFamily: "'Georgia', 'Times New Roman', serif", color: T.ink }}>
+            <style>{`
+              .wf-preview h2 { font-size: 26px; font-weight: 700; margin: 32px 0 12px; font-family: 'Georgia', serif; }
+              .wf-preview h3 { font-size: 20px; font-weight: 700; margin: 24px 0 10px; font-family: 'Georgia', serif; }
+              .wf-preview p  { margin-bottom: 24px; }
+              .wf-preview blockquote { border-left: 3px solid #ccc; padding-left: 20px; color: #666; margin: 24px 0; font-style: italic; }
+              .wf-preview code { background: #f0ece4; padding: 2px 6px; border-radius: 3px; font-size: 16px; font-family: monospace; }
+              .wf-preview pre { background: #f0ece4; padding: 16px; border-radius: 6px; overflow-x: auto; margin-bottom: 24px; }
+              .wf-preview ul, .wf-preview ol { padding-left: 24px; margin-bottom: 24px; }
+              .wf-preview li { margin-bottom: 8px; }
+              .wf-preview a  { color: #2D6A2D; text-decoration: underline; }
+              .wf-preview hr { border: none; border-top: 1px solid #D9D4CB; margin: 32px 0; }
+              .wf-preview strong { font-weight: 700; }
+              .wf-preview em { font-style: italic; }
+            `}</style>
+            <div className="wf-preview">
+              <ReactMarkdown>{body || '*Nothing to preview yet…*'}</ReactMarkdown>
+            </div>
+          </div>
+        ) : (
+          <textarea ref={bodyRef} style={STYLES.bodyEditor} placeholder="Tell your story…" value={body} onChange={e => setBody(e.target.value)} rows={16}/>
+        )}
 
         {/* Tags */}
         <div style={STYLES.tagSection}>
