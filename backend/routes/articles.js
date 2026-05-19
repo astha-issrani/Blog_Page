@@ -1,39 +1,36 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 const Article = require('../models/Article');
-const User = require('../models/User');
-const { protect, optionalAuth } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ── Multer setup ──────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // make sure this folder exists in your backend root
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  },
+// ── Cloudinary config ─────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp/;
-  const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-  const mime = allowed.test(file.mimetype);
-  if (ext && mime) cb(null, true);
-  else cb(new Error('Only image files are allowed'));
-};
+// ── Multer → Cloudinary storage ───────────────────────────────────────────────
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'writeflow-covers',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 1200, height: 630, crop: 'fill', quality: 'auto' }],
+  },
+});
 
 const upload = multer({
   storage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
-// GET /api/articles — get all published articles
+// GET /api/articles — all published articles
 router.get('/', async (req, res) => {
   try {
     const articles = await Article.find({ status: 'published' })
@@ -46,7 +43,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/articles/user/my — get logged in user's articles
+// GET /api/articles/user/my — logged-in user's articles
 router.get('/user/my', protect, async (req, res) => {
   try {
     const articles = await Article.find({ author: req.user._id })
@@ -57,7 +54,7 @@ router.get('/user/my', protect, async (req, res) => {
   }
 });
 
-// GET /api/articles/:id — get single article
+// GET /api/articles/:id — single article
 router.get('/:id', async (req, res) => {
   try {
     const article = await Article.findById(req.params.id)
@@ -77,22 +74,19 @@ router.post('/', protect, upload.single('coverImage'), async (req, res) => {
     if (!title || !content)
       return res.status(400).json({ message: 'Title and content are required' });
 
-    // tags arrives as a JSON string from FormData
     if (typeof tags === 'string') {
       try { tags = JSON.parse(tags); } catch { tags = []; }
     }
 
-    // Build cover image URL if a file was uploaded
-    const coverImage = req.file
-      ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
-      : null;
+    // Cloudinary gives us req.file.path as the secure URL
+    const coverImage = req.file ? req.file.path : null;
 
     const article = await Article.create({
       title,
       subtitle: subtitle || '',
       content,
       tags: tags || [],
-      coverImage,           // save to DB (add this field to your Article model if not present)
+      coverImage,
       author: req.user._id,
       status: status || 'published',
     });
