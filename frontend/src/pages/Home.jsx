@@ -167,8 +167,8 @@ export default function HomePage() {
         </div>
 
         {/* REAL USER ARTICLES — only shown when users have published */}
-        {!loading && realArticles.length > 0 && (
-          <section className="wf-articles-section">
+       {!loading && realArticles.length > 0 && (
+  <section className="wf-articles-section" ref={articlesRef}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
               <span className="wf-section-label" style={{ marginBottom: 0 }}>Latest from our writers</span>
               <span className="wf-new-badge">NEW</span>
@@ -198,9 +198,8 @@ export default function HomePage() {
         )}
 
         {/* STAFF PICKS — always shown */}
-        <section className="wf-articles-section" ref={articlesRef}>
-  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-    <span className="wf-section-label" >Latest from our writers</span></div>
+        <section className="wf-articles-section" ref={realArticles.length === 0 ? articlesRef : null}>
+  <div className="wf-section-label">Staff Picks</div>
           <div className="wf-articles-grid">
             {SEED_ARTICLES.map(a => (
               <div key={a.id} className="wf-article-card" onClick={goToBlog}>
