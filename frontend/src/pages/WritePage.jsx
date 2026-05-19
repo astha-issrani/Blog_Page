@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../utils/api';
 import { useAuth } from "../context/AuthContext";
 
 const T = {
@@ -152,7 +152,7 @@ export default function WritePage() {
     try {
       const token = localStorage.getItem("wf_token");
       const formData = buildFormData({ title, subtitle, body, tags, status: "draft", fileRef });
-      await axios.post("/api/articles", formData, {
+      await api.post("/api/articles", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -180,7 +180,7 @@ export default function WritePage() {
     try {
       const token = localStorage.getItem("wf_token");
       const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
-      await axios.post("/api/articles", formData, {
+      await api.post("/api/articles", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
