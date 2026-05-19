@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -9,6 +9,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import WritePage from './pages/WritePage'
 import BlogPage from './pages/BlogPage'
 import MyDrafts from './pages/MyDrafts'
+
 
 const STANDALONE = ['/admin/login', '/admin/dashboard', '/write']
 
@@ -55,8 +56,8 @@ function Layout() {
                 color: '#7a6f5e', cursor: 'pointer'
               }}>{l}</span>
             ))}
-            <a href="/privacy" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#7a6f5e', textDecoration: 'none' }}>Privacy</a>
-            <a href="/terms"   style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#7a6f5e', textDecoration: 'none' }}>Terms</a>
+            <Link to="/privacy" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#7a6f5e', textDecoration: 'none' }}>Privacy</Link>
+<Link to="/terms"   style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#7a6f5e', textDecoration: 'none' }}>Terms</Link>
           </div>
         </footer>
       )}

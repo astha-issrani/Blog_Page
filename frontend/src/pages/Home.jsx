@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import AdBanner from '../components/AdBanner'
 import api from '../utils/api'
+import { useRef } from 'react'
 
 const fontLink = document.createElement('link')
 fontLink.rel = 'stylesheet'
@@ -85,6 +86,7 @@ const TAGS = ['Writing','Technology','Self-Improvement','Design','Poetry','Data 
 const thumbGrads = ['#0d1117','#1a1a2e','#0f2027','#200122','#141e30','#1a1040']
 
 export default function HomePage() {
+  const articlesRef = useRef(null)
   const { user } = useAuth()
   const navigate = useNavigate()
   const [modal, setModal] = useState(null)
@@ -99,9 +101,12 @@ export default function HomePage() {
   }, [])
 
   const handleStart = () => {
-    if (user) navigate('/blog')
-    else setModal('register')
+  if (user) {
+    articlesRef.current?.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    setModal('login')
   }
+}
 
   const handleStartWriting = () => {
     if (user) navigate('/write')
@@ -193,8 +198,9 @@ export default function HomePage() {
         )}
 
         {/* STAFF PICKS — always shown */}
-        <section className="wf-articles-section">
-          <div className="wf-section-label">Staff Picks</div>
+        <section className="wf-articles-section" ref={articlesRef}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+    <span className="wf-section-label" >Latest from our writers</span></div>
           <div className="wf-articles-grid">
             {SEED_ARTICLES.map(a => (
               <div key={a.id} className="wf-article-card" onClick={goToBlog}>
