@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AdBanner from "../components/AdBanner";
-import api from '../utils/api'
+import api from '../utils/api';
+import ReactMarkdown from 'react-markdown';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
@@ -247,10 +248,22 @@ export default function BlogPage() {
           </div>
 
           <div className="wf-body">
-            {article.content.split('\n\n').map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
-          </div>
+  <style>{`
+    .wf-body h2 { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 34px; color: #000; margin: 48px 0 16px; letter-spacing: -0.3px; }
+    .wf-body h3 { font-family: var(--serif); font-size: 20px; font-weight: 700; margin: 32px 0 12px; }
+    .wf-body p  { font-family: var(--serif); font-size: 20px; line-height: 32px; color: var(--text-primary); margin-bottom: 32px; letter-spacing: -0.003em; }
+    .wf-body blockquote { border-left: 3px solid #000; padding-left: 24px; margin: 36px 0; font-style: italic; color: var(--text-secondary); }
+    .wf-body code { background: #f2f2f2; padding: 2px 6px; border-radius: 3px; font-size: 16px; font-family: monospace; }
+    .wf-body pre  { background: #f2f2f2; padding: 16px; border-radius: 6px; overflow-x: auto; margin-bottom: 24px; }
+    .wf-body ul, .wf-body ol { padding-left: 28px; margin-bottom: 28px; font-family: var(--serif); font-size: 20px; line-height: 32px; }
+    .wf-body li   { margin-bottom: 8px; }
+    .wf-body a    { color: var(--green); text-decoration: underline; }
+    .wf-body hr   { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+    .wf-body strong { font-weight: 700; }
+    .wf-body em   { font-style: italic; }
+  `}</style>
+  <ReactMarkdown>{article.content}</ReactMarkdown>
+</div>
 
           <div style={{ margin: '0 0 40px', display: 'flex', justifyContent: 'center' }}>
             <AdBanner slot="horizontal" />
