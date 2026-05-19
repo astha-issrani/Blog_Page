@@ -188,7 +188,6 @@ export default function WritePage() {
 
       {/* ── NAV ── */}
       <nav style={STYLES.nav}>
-        <a href="/" style={STYLES.logo}>WriteFlow</a>
         <div style={STYLES.navRight}>
           <span style={{ fontSize: "13px", color: T.muted, fontFamily: "'Georgia', serif", opacity: saved ? 1 : 0, transition: "opacity 0.4s" }}>
             Draft saved
