@@ -169,21 +169,29 @@ export default function WritePage() {
   };
 
   // ── Confirm publish (includes image) ────────────────────────────────────
-  const confirmPublish = async () => {
-    setPublishing(true);
-    setError("");
-    try {
-     
-      const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
-      await api.post("/api/articles", formData);
-      setPublished(true);
-      setShowPublishModal(false);
-      setTimeout(() => navigate("/"), 1200);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to publish. Please try again.");
-      setPublishing(false);
-    }
-  };
+ const confirmPublish = async () => {
+  setPublishing(true);
+  setError("");
+  try {
+    const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
+    
+    // ADD THESE LOGS
+    console.log("File exists?", fileRef.current?.files[0])
+    console.log("FormData coverImage:", formData.get("coverImage"))
+    
+    const res = await api.post("/api/articles", formData)
+    
+    // ADD THIS LOG
+    console.log("Response:", res.data.article?.coverImage)
+    
+    setPublished(true);
+    setShowPublishModal(false);
+    setTimeout(() => navigate("/"), 1200);
+  } catch (err) {
+    setError(err.response?.data?.message || "Failed to publish. Please try again.");
+    setPublishing(false);
+  }
+};
 
   return (
     <div style={STYLES.page}>
