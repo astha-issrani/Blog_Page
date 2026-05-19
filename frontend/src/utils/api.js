@@ -4,9 +4,9 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
 })
 
-// Attach admin token if present
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('admin_token')
+  const token = localStorage.getItem('wf_token') 
+             || localStorage.getItem('admin_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })

@@ -150,14 +150,9 @@ export default function WritePage() {
   const handleSaveDraft = async () => {
     if (!title.trim()) return;
     try {
-      const token = localStorage.getItem("wf_token");
+      
       const formData = buildFormData({ title, subtitle, body, tags, status: "draft", fileRef });
-      await api.post("/api/articles", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await api.post("/api/articles", formData);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
@@ -178,14 +173,9 @@ export default function WritePage() {
     setPublishing(true);
     setError("");
     try {
-      const token = localStorage.getItem("wf_token");
+     
       const formData = buildFormData({ title, subtitle, body, tags, status: "published", fileRef });
-      await api.post("/api/articles", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await api.post("/api/articles", formData);
       setPublished(true);
       setShowPublishModal(false);
       setTimeout(() => navigate("/"), 1200);
