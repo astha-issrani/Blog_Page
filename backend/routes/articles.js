@@ -1,9 +1,37 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const Article = require('../models/Article');
 const User = require('../models/User');
 const { protect, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ── Multer setup ──────────────────────────────────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // make sure this folder exists in your backend root
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowed = /jpeg|jpg|png|gif|webp/;
+  const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+  const mime = allowed.test(file.mimetype);
+  if (ext && mime) cb(null, true);
+  else cb(new Error('Only image files are allowed'));
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 // GET /api/articles — get all published articles
 router.get('/', async (req, res) => {
@@ -41,18 +69,30 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/articles — create article
-router.post('/', protect, async (req, res) => {
+// POST /api/articles — create article (with optional cover image)
+router.post('/', protect, upload.single('coverImage'), async (req, res) => {
   try {
-    const { title, subtitle, content, tags, status } = req.body;
+    let { title, subtitle, content, tags, status } = req.body;
+
     if (!title || !content)
       return res.status(400).json({ message: 'Title and content are required' });
+
+    // tags arrives as a JSON string from FormData
+    if (typeof tags === 'string') {
+      try { tags = JSON.parse(tags); } catch { tags = []; }
+    }
+
+    // Build cover image URL if a file was uploaded
+    const coverImage = req.file
+      ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
+      : null;
 
     const article = await Article.create({
       title,
       subtitle: subtitle || '',
       content,
       tags: tags || [],
+      coverImage,           // save to DB (add this field to your Article model if not present)
       author: req.user._id,
       status: status || 'published',
     });

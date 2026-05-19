@@ -35,7 +35,9 @@ const articleSchema = new mongoose.Schema({
     enum: ['draft', 'published'],
     default: 'published'
   },
-}, { timestamps: true });
+  coverImage: { type: String, default: null },
+}, { timestamps: true },
+);
 
 // Auto-calculate read time before save
 articleSchema.pre('save', function (next) {

@@ -7,7 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const articleRoutes = require('./routes/articles');
-
+app.use('/uploads', express.static('uploads'));
 const app = express();
 
 // Rate limiting
