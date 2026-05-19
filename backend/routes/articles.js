@@ -133,4 +133,34 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
+// PUT /api/articles/:id — update article (edit draft or publish)
+router.put('/:id', protect, upload.single('coverImage'), async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+
+    if (article.author.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Not authorized' });
+
+    let { title, subtitle, content, tags, status } = req.body;
+
+    if (typeof tags === 'string') {
+      try { tags = JSON.parse(tags); } catch { tags = []; }
+    }
+
+    if (title) article.title = title;
+    if (subtitle !== undefined) article.subtitle = subtitle;
+    if (content) article.content = content;
+    if (tags) article.tags = tags;
+    if (status) article.status = status;
+    if (req.file) article.coverImage = req.file.path;
+
+    await article.save();
+    await article.populate('author', 'name email');
+    res.json({ article });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
