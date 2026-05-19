@@ -262,7 +262,17 @@ export default function BlogPage() {
     .wf-body strong { font-weight: 700; }
     .wf-body em   { font-style: italic; }
   `}</style>
-  <ReactMarkdown>{article.content}</ReactMarkdown>
+  <ReactMarkdown
+  components={{
+    a: ({ href, children }) => (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    )
+  }}
+>
+  {article.content}
+</ReactMarkdown>
 </div>
 
           <div style={{ margin: '0 0 40px', display: 'flex', justifyContent: 'center' }}>
